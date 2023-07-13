@@ -19,7 +19,7 @@ MonoBehaviour:
     width: 1920
     height: 989
   m_ShowMode: 4
-  m_Title: Hierarchy
+  m_Title: Inspector
   m_RootView: {fileID: 6}
   m_MinSize: {x: 875, y: 300}
   m_MaxSize: {x: 10000, y: 10000}
@@ -48,7 +48,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 100}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 16
+  controlID: 309
 --- !u!114 &3
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -224,7 +224,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 100}
   m_MaxSize: {x: 16192, y: 16192}
   vertical: 1
-  controlID: 17
+  controlID: 52
 --- !u!114 &10
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -249,7 +249,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 50}
   m_MaxSize: {x: 16192, y: 8096}
   vertical: 0
-  controlID: 18
+  controlID: 42
 --- !u!114 &11
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -404,14 +404,14 @@ MonoBehaviour:
   m_LastFolders:
   - Assets/Prefabs
   m_LastFoldersGridSize: -1
-  m_LastProjectPath: C:\Users\charl\unitygames\TAC-V
+  m_LastProjectPath: C:\Users\charl\unitygames\TACVGithub\TACV
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
     scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: 9e910000
-    m_LastClickedID: 37278
-    m_ExpandedIDs: 00000000949100009691000000ca9a3b
+    m_SelectedIDs: f2910000
+    m_LastClickedID: 37362
+    m_ExpandedIDs: 00000000e8910000ea91000000ca9a3b
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -439,7 +439,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 000000009491000096910000
+    m_ExpandedIDs: 00000000e8910000ea910000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -581,9 +581,9 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: fe920000
-      m_LastClickedID: 37630
-      m_ExpandedIDs: 72d5ffffea920000f6920000
+      m_SelectedIDs: 4c920000
+      m_LastClickedID: 37452
+      m_ExpandedIDs: 5ef4ffff4c920000
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -672,8 +672,8 @@ MonoBehaviour:
       floating: 0
       collapsed: 0
       displayed: 1
-      snapOffset: {x: 0, y: 0}
-      snapOffsetDelta: {x: 0, y: 25}
+      snapOffset: {x: 0, y: 25}
+      snapOffsetDelta: {x: 0, y: 0}
       snapCorner: 0
       id: unity-scene-view-toolbar
       index: 0
@@ -698,8 +698,8 @@ MonoBehaviour:
       floating: 0
       collapsed: 0
       displayed: 1
-      snapOffset: {x: 0, y: 0}
-      snapOffsetDelta: {x: 0, y: 25}
+      snapOffset: {x: 0, y: 25}
+      snapOffsetDelta: {x: 0, y: 0}
       snapCorner: 0
       id: unity-transform-toolbar
       index: 0
@@ -990,9 +990,9 @@ MonoBehaviour:
   m_PlayAudio: 0
   m_AudioPlay: 0
   m_Position:
-    m_Target: {x: 0, y: 1.1175997, z: 0}
+    m_Target: {x: 0, y: 0, z: 0}
     speed: 2
-    m_Value: {x: -21.7278, y: -5.819865, z: -5.286833}
+    m_Value: {x: -15.54468, y: -10.510829, z: -12.608339}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -1038,11 +1038,11 @@ MonoBehaviour:
     m_GridAxis: 1
     m_gridOpacity: 0.5
   m_Rotation:
-    m_Target: {x: -0.15433954, y: -0.12912193, z: 0.02035627, w: -0.979352}
+    m_Target: {x: -0.1514383, y: -0.26398093, z: 0.042012427, w: -0.95165604}
     speed: 2
-    m_Value: {x: -0.09058759, y: 0.7995946, z: -0.124775685, w: -0.58040804}
+    m_Value: {x: -0.104642056, y: 0.87511957, z: -0.21861833, w: -0.4188339}
   m_Size:
-    m_Target: 12.124355
+    m_Target: 1.2251433
     speed: 2
     m_Value: 14.163467
   m_Ortho:

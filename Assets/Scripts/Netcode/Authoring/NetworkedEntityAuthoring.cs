@@ -23,7 +23,7 @@ public class NetworkedEntityAuthoring : MonoBehaviour
             if (!TryFindGameObjectInNetworkedPrefabs(authoring.OriginalNetworkedPrefab, authoring.NetworkedPrefabs))
                 throw new Exception($"the prefab {authoring.OriginalNetworkedPrefab.name} could not be found in Networked Prefabs");
 
-            AddComponent(entity, new NetworkedEntityComponent() { connectionId = NetworkManager.SERVER_NET_ID, networkedPrefabHash = authoring.OriginalNetworkedPrefab.name.GetHashCode() });            
+            AddComponent(entity, new NetworkedEntityComponent() { connectionId = NetworkManager.SERVER_NET_ID, networkedPrefabHash = authoring.OriginalNetworkedPrefab.name.GetHashCode() });
         }
 
         private bool TryFindGameObjectInNetworkedPrefabs(GameObject networkedGameObject, NetworkedPrefabsAuthoring networkedPrefabsAuthoring)

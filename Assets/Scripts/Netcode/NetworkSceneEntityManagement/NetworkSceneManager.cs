@@ -10,7 +10,7 @@ public class NetworkSceneManager
 {
     public World NetworkWorld { get; private set; }
 
-    public NetworkedObjectContainer NetworkedObjectContainer { get; private set; }
+    public NetworkedEntityContainer NetworkedEntityContainer { get; private set; }
 
     public float TicksPerSecond 
     {   
@@ -28,11 +28,11 @@ public class NetworkSceneManager
         {
             case NetworkType.Client:
                 NetworkWorld = CreateNetworkWorld<ClientSystemAttribute>("ClientWorld", ticksPerSecond);
-                NetworkedObjectContainer = new ClientNetworkedObjectContainer(NetworkWorld.EntityManager);
+                NetworkedEntityContainer = new ClientNetworkedEntityContainer(NetworkWorld.EntityManager);
                 break;
             case NetworkType.Server:
                 NetworkWorld = CreateNetworkWorld<ServerSystemAttribute>("ServerWorld", ticksPerSecond);
-                NetworkedObjectContainer = new ServerNetworkedObjectContainer(NetworkWorld.EntityManager);
+                NetworkedEntityContainer = new ServerNetworkedEntityContainer(NetworkWorld.EntityManager);
 
                 ((ServerNetwork)NetworkManager.Instance.Network).Server.ClientConnected += (o, e) =>
                 {
@@ -41,7 +41,7 @@ public class NetworkSceneManager
                 break;
             case NetworkType.Host:
                 NetworkWorld = CreateNetworkWorld<NetworkSystemBaseAttribute>("HostWorld", ticksPerSecond);
-                NetworkedObjectContainer = new HostNetworkedObjectContainer(NetworkWorld.EntityManager);
+                NetworkedEntityContainer = new HostNetworkedEntityContainer(NetworkWorld.EntityManager);
 
                 ((HostNetwork)NetworkManager.Instance.Network).Server.ClientConnected += (o, e) =>
                 {
@@ -67,17 +67,17 @@ public class NetworkSceneManager
 
             newSceneOperation.completed += (AsyncOperation ao) =>
             {
-                NetworkedObjectContainer.DestroyAllNetworkedEntities();
+                NetworkedEntityContainer.DestroyAllNetworkedEntities();
 
                 if (NetworkManager.Instance.NetworkType == NetworkType.Host)
                 {
                     NetworkWorld = CreateNetworkWorld<NetworkSystemBaseAttribute>("HostWorld", TicksPerSecond);
-                    NetworkedObjectContainer = new HostNetworkedObjectContainer(NetworkWorld.EntityManager);
+                    NetworkedEntityContainer = new HostNetworkedEntityContainer(NetworkWorld.EntityManager);
                 }
                 else
                 {
                     NetworkWorld = CreateNetworkWorld<ServerSystemAttribute>("ServerWorld", TicksPerSecond);
-                    NetworkedObjectContainer = new ServerNetworkedObjectContainer(NetworkWorld.EntityManager);
+                    NetworkedEntityContainer = new ServerNetworkedEntityContainer(NetworkWorld.EntityManager);
                 }
             };
 
@@ -89,7 +89,7 @@ public class NetworkSceneManager
 
             newSceneOperation.completed += (AsyncOperation asyncOperation) =>
             {
-                NetworkedObjectContainer.DestroyAllNetworkedEntities();
+                NetworkedEntityContainer.DestroyAllNetworkedEntities();
                 SendClientCompletedSceneMessage();
             };
         }
@@ -177,7 +177,7 @@ public class NetworkSceneManager
             return;
         }
 
-        IEnumerator<KeyValuePair<ulong, Entity>> enumerator = NetworkManager.Instance.NetworkSceneManager.NetworkedObjectContainer.GetEntities();
+        IEnumerator<KeyValuePair<ulong, Entity>> enumerator = NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetEntities();
 
         while (enumerator.MoveNext())
         {

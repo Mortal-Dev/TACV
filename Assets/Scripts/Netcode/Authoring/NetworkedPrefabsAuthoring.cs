@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class NetworkedPrefabsAuthoring : MonoBehaviour
 {
-    public List<GameObject> NetworkedPrefabs;
+    public GameObject[] NetworkedPrefabs;
 
     class Baking : Baker<NetworkedPrefabsAuthoring>
     {
@@ -13,11 +13,11 @@ public class NetworkedPrefabsAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
 
-            NetworkedPrefabsComponent networkedPrefabsComponent = new NetworkedPrefabsComponent() { NetworkedPrefabs = new NativeHashMap<int, Entity>() };
+            NetworkedPrefabsComponent networkedPrefabsComponent = new NetworkedPrefabsComponent() { hashCodes = new FixedList512Bytes<int>(), prefabs = new FixedList512Bytes<Entity>() };
 
             foreach (GameObject gameObject in authoring.NetworkedPrefabs)
             {
-                networkedPrefabsComponent.NetworkedPrefabs.Add(gameObject.name.GetHashCode(), GetEntity(gameObject, TransformUsageFlags.Dynamic));
+                networkedPrefabsComponent.AddPrefab(gameObject.name.GetHashCode(), GetEntity(gameObject, TransformUsageFlags.Dynamic));
             }
 
             AddComponent(entity, networkedPrefabsComponent);

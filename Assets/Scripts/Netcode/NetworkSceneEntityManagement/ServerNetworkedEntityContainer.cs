@@ -36,7 +36,7 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
     {
         if (!networkedPrefabsComponent.IsValid) SetNetworkedPrefabsComponent();
 
-        if (!networkedPrefabsComponent.ValueRO.NetworkedPrefabs.TryGetValue(networkedPrefabHash, out Entity networkedPrefabEntity)) throw new Exception($"unable to find entity hash {networkedPrefabHash}");
+        if (!networkedPrefabsComponent.ValueRO.TryGetEntity(networkedPrefabHash, out Entity networkedPrefabEntity)) throw new Exception($"unable to find entity hash {networkedPrefabHash}");
         
         if (!serverEntityManager.HasComponent(networkedPrefabEntity, typeof(NetworkedEntityComponent))) throw new Exception("attempting to instantiate networked entity without a networked entity component");
 

@@ -25,56 +25,38 @@ public abstract class NetworkedEntityContainer
 
     public abstract ulong CreateNetworkedEntity(int networkedPrefabHash, ushort connectionOwnerId = NetworkManager.SERVER_NET_ID, ulong networkEntityId = ulong.MaxValue);
 
+    public abstract ulong ActiveNetworkedEntity(Entity entity);
+
+    public ulong CreateNetworkedEntityFromIndex(short prefabIndex, ushort connectionOwnerId = NetworkManager.SERVER_NET_ID, ulong networkEntityId = ulong.MaxValue)
+    {
+        EntityManager entityManager = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager;
+
+        using EntityQuery entityQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkedPrefabsComponent>());
+
+        NetworkedPrefabsComponent networkedPrefabsComponent = entityQuery.GetSingleton<NetworkedPrefabsComponent>();
+
+        int prefabHash = networkedPrefabsComponent.hashCodes[prefabIndex];
+
+        return CreateNetworkedEntity(prefabHash, connectionOwnerId, networkEntityId);
+    }
+
+    public ulong CreateNetworkedEntity(Entity networkedEntityPrefab, ushort connectionOwnerId = NetworkManager.SERVER_NET_ID, ulong networkEntityId = ulong.MaxValue)
+    {
+        EntityManager entityManager = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager;
+
+        using EntityQuery entityQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkedPrefabsComponent>());
+
+        NetworkedPrefabsComponent networkedPrefabsComponent = entityQuery.GetSingleton<NetworkedPrefabsComponent>();
+
+        for (int i = 0; i < networkedPrefabsComponent.prefabs.Length; i++)
+        {
+            if (networkedPrefabsComponent.prefabs[i].Equals(networkedEntityPrefab)) return CreateNetworkedEntity(networkedPrefabsComponent.hashCodes[i], connectionOwnerId, networkEntityId);
+        }
+
+        throw new System.Exception("unable to find entity from prefab");
+    }
+
     public abstract void DestroyNetworkedEntity(ulong id);
 
     public abstract void DestroyAllNetworkedEntities();
-
-    [MessageHandler((ushort)NetworkMessageId.SyncEntities)]
-    private static void ServerRecieveSyncEntities(ushort fromClient, Message message)
-    {
-        ulong networkedEntityId = message.GetULong();
-
-        Entity networkedEntity = NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetEntity(networkedEntityId);
-
-        if (NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.GetComponentData<NetworkedEntityComponent>(networkedEntity).connectionId != fromClient) return;
-
-        RecieveSyncEntities(message);
-    }
-
-    [MessageHandler((ushort)NetworkMessageId.SyncEntities)]
-    private static void RecieveSyncEntities(Message message)
-    {
-        ulong networkedEntityId = message.GetULong();
-
-        Entity networkedEntity = NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetEntity(networkedEntityId);
-
-        int length = message.GetInt();
-
-        for (int i = 0; i < length; i++)
-        {
-            LocalTransform localTransform = message.GetLocalTransform();
-            short[] entityChildMap = message.GetShorts();
-
-            if (entityChildMap[0] == -1)
-            {
-                //-1 is the parent, so we just set that
-                NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.SetComponentData(networkedEntity, localTransform);
-                continue;
-            }
-
-            NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.SetComponentData(GetChildFromChildMap(networkedEntity, entityChildMap), localTransform);
-        }
-    }
-
-    private static Entity GetChildFromChildMap(Entity parentRoot, short[] entityChildMap)
-    {
-        foreach (short siblingIndex in entityChildMap)
-        {
-            DynamicBuffer<Child> childBuffer = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.GetBuffer<Child>(parentRoot);
-
-            parentRoot = childBuffer[siblingIndex].Value;
-        }
-
-        return parentRoot;
-    }
 }

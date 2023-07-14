@@ -50,7 +50,7 @@ public class NetworkSceneManager
                 break;
         }
 
-        DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(NetworkWorld, GetNonDisableAutoCreateSystem());
+        
 
         World.DefaultGameObjectInjectionWorld = NetworkWorld;
     }
@@ -101,14 +101,23 @@ public class NetworkSceneManager
 
     private World CreateNetworkWorld<TNetworkSystemAttribute>(string worldName, float tickPerSecond) where TNetworkSystemAttribute : Attribute
     {
-        World world = new World(worldName);
+        World world = new World(worldName, WorldFlags.Live);
 
         //clone entity prefab manager into networked world
-        world.EntityManager.Instantiate(World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkedPrefabsComponent>()).GetSingletonEntity());
+        NetworkedPrefabsComponent networkedPrefabEntity = World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkedPrefabsComponent>()).GetSingleton<NetworkedPrefabsComponent>();
+        Entity newEntity = world.EntityManager.CreateEntity();
+        world.EntityManager.AddComponent<NetworkedPrefabsComponent>(newEntity);
+        world.EntityManager.SetComponentData(newEntity, networkedPrefabEntity);
 
         Type[] systemTypes = AttributeUsageFinder.GetUsages<TNetworkSystemAttribute>();
 
-        foreach (Type type in systemTypes) world.CreateSystem(type);
+        foreach (Type type in systemTypes)
+        {
+            Debug.Log(type);
+            world.CreateSystem(type);
+        }
+
+        DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, GetNonDisableAutoCreateSystem());
 
         //shadow wizard casting gang (we love casting objects)
         ((FixedStepSimulationSystemGroup)world.GetExistingSystemManaged(typeof(FixedStepSimulationSystemGroup))).Timestep = 1f / tickPerSecond;

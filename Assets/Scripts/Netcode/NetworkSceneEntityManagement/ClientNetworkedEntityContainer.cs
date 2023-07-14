@@ -73,6 +73,8 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
     [MessageHandler((ushort)NetworkMessageId.ServerSpawnEntity)]
     private static void SpawnNetworkedEntityRecieved(Message message)
     {
+        UnityEngine.Debug.Log("server spawn");
+
         int entityHash = message.GetInt();
         ushort ownerId = message.GetUShort();
         LocalTransform localTransform = message.GetLocalTransform();
@@ -91,7 +93,7 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
         NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.DestroyEntity(NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetEntity(networkedEntityId));
     }
 
-    [MessageHandler((ushort)NetworkMessageId.SyncEntities)]
+    [MessageHandler((ushort)NetworkMessageId.ServerSyncEntities)]
     private static void ClientRecieveSyncEntities(Message message)
     {
         ulong networkedEntityId = message.GetULong();
@@ -126,5 +128,10 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
         }
 
         return parentRoot;
+    }
+
+    public override ulong ActiveNetworkedEntity(Entity entity)
+    {
+        throw new Exception("cannot active entites from client, must be server");
     }
 }

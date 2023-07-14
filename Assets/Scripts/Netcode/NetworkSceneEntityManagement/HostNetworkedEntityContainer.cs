@@ -10,7 +10,7 @@ public class HostNetworkedEntityContainer : NetworkedEntityContainer
 
     private IdGenerator networkIdGenerator;
 
-    private RefRO<NetworkedPrefabsComponent> networkedPrefabsComponent;
+    private RefRW<NetworkedPrefabsComponent> networkedPrefabsComponent;
 
     private EntityManager hostEntityManager;
 
@@ -27,7 +27,7 @@ public class HostNetworkedEntityContainer : NetworkedEntityContainer
         server = ((HostNetwork)NetworkManager.Instance.Network).Server;
     }
 
-   public override ulong CreateNetworkedEntity(int networkedPrefabHash, ushort connectionOwnerId = ushort.MaxValue, ulong networkEntityId = ulong.MaxValue)
+    public override ulong CreateNetworkedEntity(int networkedPrefabHash, ushort connectionOwnerId = ushort.MaxValue, ulong networkEntityId = ulong.MaxValue)
     {
         if (!networkedPrefabsComponent.IsValid) SetNetworkedPrefabsComponent();
 
@@ -44,6 +44,27 @@ public class HostNetworkedEntityContainer : NetworkedEntityContainer
         networkedEntities.Add(id, entity);
 
         SendSpawnNetworkedEntityMessage(networkedPrefabHash, connectionOwnerId, hostEntityManager.GetComponentData<LocalTransform>(entity));
+
+        return id;
+    }
+
+    public override ulong ActiveNetworkedEntity(Entity entity)
+    {
+        if (!networkedPrefabsComponent.IsValid) SetNetworkedPrefabsComponent();
+
+        NetworkedEntityComponent networkedEntityComponent = hostEntityManager.GetComponentData<NetworkedEntityComponent>(entity);
+
+        if (!networkedPrefabsComponent.ValueRO.TryGetEntity(networkedEntityComponent.networkedPrefabHash, out Entity _)) throw new Exception($"unable to find entity hash for unactivated entity");
+
+        ulong id = networkIdGenerator.GenerateId();
+
+        networkedEntityComponent.networkEntityId = id;
+
+        networkedEntities.Add(id, entity);
+
+        SendSpawnNetworkedEntityMessage(networkedEntityComponent.networkedPrefabHash, networkedEntityComponent.connectionId, hostEntityManager.GetComponentData<LocalTransform>(entity));
+
+        hostEntityManager.SetComponentData(entity, networkedEntityComponent);
 
         return id;
     }
@@ -71,12 +92,12 @@ public class HostNetworkedEntityContainer : NetworkedEntityContainer
         networkIdGenerator = new IdGenerator();
         networkedEntities.Clear();
     }
-   
+
     private void SetNetworkedPrefabsComponent()
     {
-        using EntityQuery entityQuery = hostEntityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkedPrefabsComponent>());
+        using EntityQuery entityQuery = hostEntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkedPrefabsComponent>());
 
-        networkedPrefabsComponent = (RefRO<NetworkedPrefabsComponent>)entityQuery.GetSingletonRW<NetworkedPrefabsComponent>();
+        networkedPrefabsComponent = entityQuery.GetSingletonRW<NetworkedPrefabsComponent>();
     }
 
     private void SendSpawnNetworkedEntityMessage(int prefabHash, ushort connectionOwnerId, LocalTransform localTransform, ushort sendToClientId = NetworkManager.SERVER_NET_ID)
@@ -122,24 +143,5 @@ public class HostNetworkedEntityContainer : NetworkedEntityContainer
 
             NetworkManager.Instance.Network.SendMessage(Message.Create(MessageSendMode.Reliable, NetworkMessageId.ServerDestroyEntity).AddULong(id), SendMode.Server, connection.Id);
         }
-    }
-
-    [MessageHandler((ushort)NetworkMessageId.SyncEntities)]
-    private static void ServerRecieveEntitySyncMessage(ushort fromClientId, Message message)
-    {
-        //since we're hosting, don't set position of our own networked entites
-        if (fromClientId == NetworkManager.CLIENT_NET_ID || fromClientId == NetworkManager.SERVER_NET_ID) return;
-
-        ulong networkedEntityId = message.GetULong();
-        LocalTransform networkLocalTransform = message.GetLocalTransform();
-
-        Entity networkedEntity = NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetEntity(networkedEntityId);
-
-        NetworkedEntityComponent networkedEntityComponent = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.GetComponentData<NetworkedEntityComponent>(networkedEntity);
-
-        //don't allow clients to set objects they don't own
-        if (networkedEntityComponent.connectionId != fromClientId) return;
-
-        NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.SetComponentData(networkedEntity, networkLocalTransform);
     }
 }

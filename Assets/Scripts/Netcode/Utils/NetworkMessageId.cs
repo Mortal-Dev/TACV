@@ -1,8 +1,8 @@
-﻿public enum NetworkMessageId
+﻿public enum NetworkMessageId : ushort
 {
-    SyncEntities,
     ClientSyncOwnedEntities,
     ClientFinishedLoadingScene,
+    ServerSyncEntities,
     ServerLoadScene,
     ServerSpawnEntity,
     ServerDestroyEntity

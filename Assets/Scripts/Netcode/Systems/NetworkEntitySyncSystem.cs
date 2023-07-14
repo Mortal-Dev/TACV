@@ -16,6 +16,9 @@ public partial struct NetworkEntitySyncSystem : ISystem
     {
         foreach (var (localTransformRecord, localTransform, networkedEntityComponent, entity) in SystemAPI.Query<RefRW<PreviousLocalTransformRecordComponent>, RefRO<LocalTransform>, RefRO<NetworkedEntityComponent>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithEntityAccess())
         {
+            //don't send a sync to ourself if we're host
+            if (NetworkManager.Instance.NetworkType == NetworkType.Host && networkedEntityComponent.ValueRO.connectionId == NetworkManager.CLIENT_NET_ID) continue;
+
             if (localTransform.ValueRO.Equals(localTransformRecord.ValueRO.localTransformRecord) || 
                 GetDirtyNetworkedChildrenComponents(SystemAPI.GetBuffer<LinkedEntityGroup>(entity), ref systemState, out List<NetworkedEntityChildLocalTransform> dirtyNetworkedChildren)) continue;
 
@@ -56,7 +59,7 @@ public partial struct NetworkEntitySyncSystem : ISystem
 
     private void SendNetworkedEntitySyncMessage(ulong id, LocalTransform localTransform, List<NetworkedEntityChildLocalTransform> networkedEntityChildComponents)
     {
-        Message message = Message.Create(MessageSendMode.Unreliable, NetworkMessageId.SyncEntities);
+        Message message = Message.Create(MessageSendMode.Unreliable, NetworkManager.Instance.NetworkType == NetworkType.Host || NetworkManager.Instance.NetworkType == NetworkType.Server ? NetworkMessageId.ServerSyncEntities : NetworkMessageId.ClientSyncOwnedEntities);
 
         message.Add(id);
 

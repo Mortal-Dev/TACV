@@ -48,7 +48,7 @@ public class HostNetworkedEntityContainer : NetworkedEntityContainer
         return id;
     }
 
-    public override ulong ActiveNetworkedEntity(Entity entity)
+    public override ulong ActivateNetworkedEntity(Entity entity)
     {
         if (!networkedPrefabsComponent.IsValid) SetNetworkedPrefabsComponent();
 

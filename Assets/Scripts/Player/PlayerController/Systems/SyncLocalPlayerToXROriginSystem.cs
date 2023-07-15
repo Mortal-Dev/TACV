@@ -6,6 +6,7 @@ using UnityEngine;
 using Unity.XR.CoreUtils;
 using Unity.Mathematics;
 
+//run only on client, but also in the default scene when we're not in a network
 [ClientSystem]
 [UpdateInGroup(typeof(PresentationSystemGroup))]
 public partial class SyncLocalPlayerToXROriginSystem : SystemBase
@@ -51,16 +52,18 @@ public partial class SyncLocalPlayerToXROriginSystem : SystemBase
 
     private void SetPositionOfXROriginToEntity()
     {
-        if (NetworkManager.Instance.NetworkType == NetworkType.None)
-            foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<PlayerComponent>())
-            {
-                XROriginGameObject.transform.SetPositionAndRotation(localTransform.ValueRO.Position, localTransform.ValueRO.Rotation);
-            }
-        else
-            foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithAll<PlayerComponent>())
-            {
-                XROriginGameObject.transform.SetPositionAndRotation(localTransform.ValueRO.Position, localTransform.ValueRO.Rotation);
-            }
+        bool foundPlayer = false;
+
+        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithAll<PlayerComponent>())
+        {
+            XROriginGameObject.transform.SetPositionAndRotation(localTransform.ValueRO.Position, localTransform.ValueRO.Rotation);
+            foundPlayer = true;
+        }
+
+        if (foundPlayer) return;
+
+        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<PlayerComponent>()) 
+            XROriginGameObject.transform.SetPositionAndRotation(localTransform.ValueRO.Position, localTransform.ValueRO.Rotation);
     }
 
     private void SetXRGameObjects()
@@ -86,10 +89,11 @@ public partial class SyncLocalPlayerToXROriginSystem : SystemBase
     //would use a generic method for these, but unity DOTS code gen no likey
     private RefRW<LocalTransform> GetEntityLeftHandTransform()
     {
-        if (NetworkManager.Instance.NetworkType == NetworkType.None)
-            foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LeftHandComponent>()) return localTransform;
-        else
-            foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithAll<LeftHandComponent>()) return localTransform;
+        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithAll<LeftHandComponent>())
+            return localTransform;
+
+        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LeftHandComponent>())
+            return localTransform;
 
         foundLocalVRObjects = false;
 
@@ -98,10 +102,11 @@ public partial class SyncLocalPlayerToXROriginSystem : SystemBase
 
     private RefRW<LocalTransform> GetEntityRightHandTransform()
     {
-        if (NetworkManager.Instance.NetworkType == NetworkType.None)
-            foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<RightHandComponent>()) return localTransform;
-        else
-            foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithAll<RightHandComponent>()) return localTransform;
+        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithAll<RightHandComponent>())
+            return localTransform;
+
+        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<RightHandComponent>())
+            return localTransform;
 
         foundLocalVRObjects = false;
 
@@ -110,10 +115,11 @@ public partial class SyncLocalPlayerToXROriginSystem : SystemBase
 
     private RefRW<LocalTransform> GetEntityHeadTransform()
     {
-        if (NetworkManager.Instance.NetworkType == NetworkType.None)
-            foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<HeadComponent>()) return localTransform;
-        else
-            foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithAll<HeadComponent>()) return localTransform;
+        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithAll<HeadComponent>())
+            return localTransform;
+
+        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<HeadComponent>())
+            return localTransform;
 
         foundLocalVRObjects = false;
 

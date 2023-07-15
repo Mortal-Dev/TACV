@@ -32,7 +32,7 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
         return value;
     }
 
-    public override ulong ActiveNetworkedEntity(Entity entity)
+    public override ulong ActivateNetworkedEntity(Entity entity)
     {
         if (!networkedPrefabsComponent.IsValid) SetNetworkedPrefabsComponent();
 
@@ -83,6 +83,8 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
         networkIdGenerator.DisposeId(id);
 
         networkedEntities.Remove(id);
+
+        if (SceneEntitiesActive.ContainsKey(id)) SceneEntitiesActive[id] = false;
 
         SendDestroyNetworkedEntityMessage(id);
     }

@@ -75,11 +75,11 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
     {
         UnityEngine.Debug.Log("server spawn");
 
-        int entityHash = message.GetInt();
+        int networkedPrefabHash = message.GetInt();
         ushort ownerId = message.GetUShort();
         LocalTransform localTransform = message.GetLocalTransform();
 
-        ulong networkEntityId = NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.CreateNetworkedEntity(entityHash, ownerId);
+        ulong networkEntityId = NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.CreateNetworkedEntity(networkedPrefabHash, ownerId);
         Entity networkEntity = NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetEntity(networkEntityId);
 
         NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.SetComponentData(networkEntity, localTransform);
@@ -93,7 +93,7 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
         NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.DestroyEntity(NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetEntity(networkedEntityId));
     }
 
-    [MessageHandler((ushort)NetworkMessageId.ServerSyncEntities)]
+    [MessageHandler((ushort)NetworkMessageId.ServerSyncEntity)]
     private static void ClientRecieveSyncEntities(Message message)
     {
         ulong networkedEntityId = message.GetULong();
@@ -118,6 +118,14 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
         }
     }
 
+    [MessageHandler((ushort)NetworkMessageId.ServerDestroyDefaultSceneEntity)]
+    private static void ClientRecieveServerDestroyDefaultSceneEntity(Message message)
+    {
+        ulong networkId = message.GetULong();
+
+        NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.DestroyNetworkedEntity(networkId);
+    }
+
     private static Entity GetChildFromChildMap(Entity parentRoot, short[] entityChildMap)
     {
         foreach (short siblingIndex in entityChildMap)
@@ -130,7 +138,7 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
         return parentRoot;
     }
 
-    public override ulong ActiveNetworkedEntity(Entity entity)
+    public override ulong ActivateNetworkedEntity(Entity entity)
     {
         throw new Exception("cannot active entites from client, must be server");
     }

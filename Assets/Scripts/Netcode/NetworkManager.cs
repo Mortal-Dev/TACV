@@ -32,7 +32,7 @@ public class NetworkManager
         RiptideLogger.Initialize(Debug.Log, Debug.Log, Debug.LogWarning, Debug.LogError, false);
     }
 
-    public void StartClient(string connection, int ticksPerSecond = 30)
+    public void StartClient(string connection, float ticksPerSecond = 30)
     {
         if (NetworkType == NetworkType.None) NetworkType = NetworkType.Client;
 
@@ -44,7 +44,7 @@ public class NetworkManager
         NetworkSceneManager = new NetworkSceneManager(ticksPerSecond);
     }
 
-    public void StartServer(ushort port, ushort maxPlayerCount, int ticksPerSecond = 30)
+    public void StartServer(ushort port, ushort maxPlayerCount, float ticksPerSecond = 30)
     {
         if (NetworkType == NetworkType.None) NetworkType = NetworkType.Server;
 
@@ -54,7 +54,7 @@ public class NetworkManager
         NetworkSceneManager = new NetworkSceneManager(ticksPerSecond);
     }
 
-    public void StartHost(ushort port, ushort maxPlayerCount, int ticksPerSecond = 30)
+    public void StartHost(ushort port, ushort maxPlayerCount, float ticksPerSecond = 30)
     {
         if (NetworkType == NetworkType.None) NetworkType = NetworkType.Host;
 

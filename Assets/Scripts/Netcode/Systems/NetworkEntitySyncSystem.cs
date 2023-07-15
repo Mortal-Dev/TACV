@@ -59,7 +59,7 @@ public partial struct NetworkEntitySyncSystem : ISystem
 
     private void SendNetworkedEntitySyncMessage(ulong id, LocalTransform localTransform, List<NetworkedEntityChildLocalTransform> networkedEntityChildComponents)
     {
-        Message message = Message.Create(MessageSendMode.Unreliable, NetworkManager.Instance.NetworkType == NetworkType.Host || NetworkManager.Instance.NetworkType == NetworkType.Server ? NetworkMessageId.ServerSyncEntities : NetworkMessageId.ClientSyncOwnedEntities);
+        Message message = Message.Create(MessageSendMode.Unreliable, NetworkManager.Instance.NetworkType == NetworkType.Host || NetworkManager.Instance.NetworkType == NetworkType.Server ? NetworkMessageId.ServerSyncEntity : NetworkMessageId.ClientSyncOwnedEntities);
 
         message.Add(id);
 

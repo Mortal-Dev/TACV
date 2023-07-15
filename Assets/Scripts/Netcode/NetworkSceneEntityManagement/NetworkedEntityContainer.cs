@@ -1,16 +1,21 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Unity.Transforms;
+using Unity.Collections;
 using Unity.Entities;
 using Riptide;
 
 public abstract class NetworkedEntityContainer
 {
-    private readonly Dictionary<ulong, Entity> NetworkedEntities;
+    public readonly Dictionary<ulong, Entity> NetworkedEntities;
+
+    public readonly Dictionary<ulong, bool> SceneEntitiesActive;
 
     public NetworkedEntityContainer()
     {
         NetworkedEntities = new Dictionary<ulong, Entity>();
+
+        SceneEntitiesActive = new Dictionary<ulong, bool>();
     }
 
     public IEnumerator<KeyValuePair<ulong, Entity>> GetEntities()
@@ -25,7 +30,7 @@ public abstract class NetworkedEntityContainer
 
     public abstract ulong CreateNetworkedEntity(int networkedPrefabHash, ushort connectionOwnerId = NetworkManager.SERVER_NET_ID, ulong networkEntityId = ulong.MaxValue);
 
-    public abstract ulong ActiveNetworkedEntity(Entity entity);
+    public abstract ulong ActivateNetworkedEntity(Entity entity);
 
     public ulong CreateNetworkedEntityFromIndex(short prefabIndex, ushort connectionOwnerId = NetworkManager.SERVER_NET_ID, ulong networkEntityId = ulong.MaxValue)
     {
@@ -59,4 +64,24 @@ public abstract class NetworkedEntityContainer
     public abstract void DestroyNetworkedEntity(ulong id);
 
     public abstract void DestroyAllNetworkedEntities();
+
+    public void SetupSceneNetworkedEntities()
+    {
+        SceneEntitiesActive.Clear();
+
+        EntityManager entityManager = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager;
+
+        EntityQuery entityQuery = entityManager.CreateEntityQuery(typeof(NetworkedEntityComponent));
+
+        NativeArray<Entity> networkedEntities = entityQuery.ToEntityArray(Allocator.Temp);
+
+        foreach (Entity entity in networkedEntities)
+        {
+            NetworkedEntityComponent networkedEntityComponent = entityManager.GetComponentData<NetworkedEntityComponent>(entity);
+            SceneEntitiesActive.Add(networkedEntityComponent.networkEntityId, true);
+            ActivateNetworkedEntity(entity);
+        }
+
+        networkedEntities.Dispose();
+    }
 }

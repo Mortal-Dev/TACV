@@ -20,6 +20,6 @@ public class NetworkTestController : MonoBehaviour
     {
         yield return new WaitForSeconds(0.2f);
 
-        NetworkManager.Instance.StartHost(696, 2);
+       // NetworkManager.Instance.StartHost(696, 2);
     }
 }

@@ -2,8 +2,9 @@
 {
     ClientSyncOwnedEntities,
     ClientFinishedLoadingScene,
-    ServerSyncEntities,
+    ServerSyncEntity,
     ServerLoadScene,
     ServerSpawnEntity,
-    ServerDestroyEntity
+    ServerDestroyEntity,
+    ServerDestroyDefaultSceneEntity
 }

@@ -8,13 +8,15 @@ public class NetworkedEntityChildAuthoring : MonoBehaviour
 {
     class Baking : Baker<NetworkedEntityChildAuthoring>
     {
+        System.Random random = new System.Random();
+
         public override void Bake(NetworkedEntityChildAuthoring authoring)
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
 
             FixedList128Bytes<short> childEntityMap = CalulateEntityChildMap(authoring.gameObject);
 
-            AddComponent(entity, new NetworkedEntityChildComponent() { childEntityMap = childEntityMap });
+            AddComponent(entity, new NetworkedEntityChildComponent() { Id =  random.Next(int.MinValue, int.MaxValue) } );
             AddComponent(entity, new PreviousLocalTransformRecordComponent() { localTransformRecord = new LocalTransform() { Position = authoring.transform.localPosition, Rotation = authoring.transform.localRotation, Scale = authoring.transform.localScale.y } });
         }
 

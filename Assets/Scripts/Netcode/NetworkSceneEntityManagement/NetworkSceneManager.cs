@@ -12,6 +12,8 @@ public class NetworkSceneManager
 
     public NetworkedEntityContainer NetworkedEntityContainer { get; private set; }
 
+    private readonly float ticksPerSecond;
+
     public float TicksPerSecond 
     {   
         get
@@ -22,37 +24,9 @@ public class NetworkSceneManager
 
     private string sceneToLoadName;
     
-    public NetworkSceneManager(int ticksPerSecond)
+    public NetworkSceneManager(float ticksPerSecond)
     {
-        switch (NetworkManager.Instance.NetworkType)
-        {
-            case NetworkType.Client:
-                NetworkWorld = CreateNetworkWorld<ClientSystemAttribute>("ClientWorld", ticksPerSecond);
-                NetworkedEntityContainer = new ClientNetworkedEntityContainer(NetworkWorld.EntityManager);
-                break;
-            case NetworkType.Server:
-                NetworkWorld = CreateNetworkWorld<ServerSystemAttribute>("ServerWorld", ticksPerSecond);
-                NetworkedEntityContainer = new ServerNetworkedEntityContainer(NetworkWorld.EntityManager);
-
-                ((ServerNetwork)NetworkManager.Instance.Network).Server.ClientConnected += (o, e) =>
-                {
-                    SendServerLoadSceneMessage(sceneToLoadName, e.Client.Id);
-                };
-                break;
-            case NetworkType.Host:
-                NetworkWorld = CreateNetworkWorld<NetworkSystemBaseAttribute>("HostWorld", ticksPerSecond);
-                NetworkedEntityContainer = new HostNetworkedEntityContainer(NetworkWorld.EntityManager);
-
-                ((HostNetwork)NetworkManager.Instance.Network).Server.ClientConnected += (o, e) =>
-                {
-                    SendServerLoadSceneMessage(sceneToLoadName, e.Client.Id);
-                };
-                break;
-        }
-
-        
-
-        World.DefaultGameObjectInjectionWorld = NetworkWorld;
+        this.ticksPerSecond = ticksPerSecond;
     }
 
     public AsyncOperation LoadScene(string sceneName)
@@ -81,6 +55,7 @@ public class NetworkSceneManager
                 }
             };
 
+            NetworkedEntityContainer.SetupSceneNetworkedEntities();
             SendServerLoadSceneMessage(sceneName, NetworkManager.SERVER_NET_ID);
         }
         else
@@ -90,16 +65,50 @@ public class NetworkSceneManager
             newSceneOperation.completed += (AsyncOperation asyncOperation) =>
             {
                 NetworkedEntityContainer.DestroyAllNetworkedEntities();
+                NetworkedEntityContainer.SetupSceneNetworkedEntities();
                 SendClientCompletedSceneMessage();
             };
         }
+
+        SetupNetworkScene();
+
+        World.DefaultGameObjectInjectionWorld = NetworkWorld;
 
         return newSceneOperation;
     }
 
     public AsyncOperation LoadScene(int sceneIndex) => LoadScene(SceneManager.GetSceneByBuildIndex(sceneIndex).name);
 
-    private World CreateNetworkWorld<TNetworkSystemAttribute>(string worldName, float tickPerSecond) where TNetworkSystemAttribute : Attribute
+    private void SetupNetworkScene()
+    {
+        switch (NetworkManager.Instance.NetworkType)
+        {
+            case NetworkType.Client:
+                NetworkWorld = CreateNetworkWorld<ClientSystemAttribute>("ClientWorld", ticksPerSecond);
+                NetworkedEntityContainer = new ClientNetworkedEntityContainer(NetworkWorld.EntityManager);
+                break;
+            case NetworkType.Server:
+                NetworkWorld = CreateNetworkWorld<ServerSystemAttribute>("ServerWorld", ticksPerSecond);
+                NetworkedEntityContainer = new ServerNetworkedEntityContainer(NetworkWorld.EntityManager);
+
+                ((ServerNetwork)NetworkManager.Instance.Network).Server.ClientConnected += (o, e) =>
+                {
+                    SendServerLoadSceneMessage(sceneToLoadName, e.Client.Id);
+                };
+                break;
+            case NetworkType.Host:
+                NetworkWorld = CreateNetworkWorld<NetworkSystemBaseAttribute>("HostWorld", ticksPerSecond);
+                NetworkedEntityContainer = new HostNetworkedEntityContainer(NetworkWorld.EntityManager);
+
+                ((HostNetwork)NetworkManager.Instance.Network).Server.ClientConnected += (o, e) =>
+                {
+                    SendServerLoadSceneMessage(sceneToLoadName, e.Client.Id);
+                };
+                break;
+        }
+    }
+
+    private World CreateNetworkWorld<TNetworkSystemAttribute>(string worldName, float tickPerSecond) where TNetworkSystemAttribute : NetworkSystemBaseAttribute
     {
         World world = new World(worldName, WorldFlags.Live);
 
@@ -113,7 +122,6 @@ public class NetworkSceneManager
 
         foreach (Type type in systemTypes)
         {
-            Debug.Log(type);
             world.CreateSystem(type);
         }
 
@@ -135,7 +143,10 @@ public class NetworkSceneManager
         {
             bool foundDisableAutoCreate = false;
 
-            foreach (var attribute in system.GetCustomAttributes(true)) if (attribute.GetType().Equals(typeof(DisableAutoCreationAttribute))) foundDisableAutoCreate = true;
+            foreach (var attribute in system.GetCustomAttributes(true))
+            {
+                if (attribute.GetType().Equals(typeof(DisableAutoCreationAttribute)) && !attribute.GetType().Equals(typeof(NetworkSystemBaseAttribute))) foundDisableAutoCreate = true;
+            }
 
             if (!foundDisableAutoCreate) nonDisableAutoCreateSystems.Add(system);
         }
@@ -176,6 +187,7 @@ public class NetworkSceneManager
     [MessageHandler((ushort)NetworkMessageId.ClientFinishedLoadingScene)]
     private static void ClientFinishedLoadingScene(ushort clientId, Message message)
     {
+        //if we're host, don't do this method
         if (clientId == NetworkManager.CLIENT_NET_ID) return;
 
         string sceneClientFinishedLoadingName = message.GetString();
@@ -186,24 +198,50 @@ public class NetworkSceneManager
             return;
         }
 
+        CheckForDestroyedNetworkedSceneEntities(clientId);
+
+        SendEntitySpawns(clientId);
+    }
+
+    [MessageHandler((ushort)NetworkMessageId.ServerLoadScene)]
+    private static void ServerLoadScene(Message message)
+    {
+        //if we're host, don't do this method
+        if (NetworkManager.Instance.NetworkType == NetworkType.Host) return;
+
+        NetworkManager.Instance.NetworkSceneManager.LoadScene(message.GetString());
+    }
+
+    private static void CheckForDestroyedNetworkedSceneEntities(ushort clientId)
+    {
+        foreach (KeyValuePair<ulong, bool> activeNetworkedSceneEntityPair in NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.SceneEntitiesActive)
+        {
+            if (activeNetworkedSceneEntityPair.Value) continue;
+
+            Message destroyEntityMessage = Message.Create(MessageSendMode.Reliable, NetworkMessageId.ServerDestroyEntity);
+
+            destroyEntityMessage.AddULong(activeNetworkedSceneEntityPair.Key);
+
+            NetworkManager.Instance.Network.SendMessage(destroyEntityMessage, SendMode.Server, clientId);
+        }
+    }
+
+    private static void SendEntitySpawns(ushort clientId)
+    {
         IEnumerator<KeyValuePair<ulong, Entity>> enumerator = NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetEntities();
 
         while (enumerator.MoveNext())
         {
             KeyValuePair<ulong, Entity> idEntityPair = enumerator.Current;
 
+            if (NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.NetworkedEntities.ContainsKey(idEntityPair.Key)) continue;
+
             NetworkedEntityComponent networkedEntityComponent = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.GetComponentData<NetworkedEntityComponent>(idEntityPair.Value);
 
             LocalTransform localTransform = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.GetComponentData<LocalTransform>(idEntityPair.Value);
 
-            NetworkManager.Instance.NetworkSceneManager.SendSpawnNetworkedEntityMessage(networkedEntityComponent.networkedPrefabHash, networkedEntityComponent.connectionId, localTransform, 
+            NetworkManager.Instance.NetworkSceneManager.SendSpawnNetworkedEntityMessage(networkedEntityComponent.networkedPrefabHash, networkedEntityComponent.connectionId, localTransform,
                 networkedEntityComponent.networkEntityId, clientId);
         }
-    }
-
-    [MessageHandler((ushort)NetworkMessageId.ServerLoadScene)]
-    private static void ServerLoadScene(Message message)
-    {
-        NetworkManager.Instance.NetworkSceneManager.LoadScene(message.GetString());
     }
 }

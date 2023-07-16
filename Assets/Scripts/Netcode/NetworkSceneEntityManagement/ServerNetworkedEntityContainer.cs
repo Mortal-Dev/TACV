@@ -130,45 +130,55 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
     [MessageHandler((ushort)NetworkMessageId.ClientSyncOwnedEntities)]
     private static void ServerRecieveSyncEntities(ushort clientId, Message message)
     {
+        if (NetworkManager.CLIENT_NET_ID == clientId) return;
+
+        NetworkSceneManager networkSceneManager = NetworkManager.Instance.NetworkSceneManager;
+
         ulong networkedEntityId = message.GetULong();
 
-        Entity networkedEntity = NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetEntity(networkedEntityId);
+        Entity networkedEntity = networkSceneManager.NetworkedEntityContainer.GetEntity(networkedEntityId);
 
-        NetworkedEntityComponent networkedEntityComponent = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.GetComponentData<NetworkedEntityComponent>(networkedEntity);
+        bool updateParentEntity = message.GetBool();
 
-        if (networkedEntityComponent.connectionId != clientId)
-        {
-            Debug.LogWarning($"client: {clientId} attemtped to set networked entity it did not own");
-            return;
-        }
+        if (updateParentEntity) networkSceneManager.NetworkWorld.EntityManager.SetComponentData(networkedEntity, message.GetLocalTransform());
 
         int length = message.GetInt();
 
         for (int i = 0; i < length; i++)
         {
-            LocalTransform localTransform = message.GetLocalTransform();
-            short[] entityChildMap = message.GetShorts();
-
-            if (entityChildMap[0] == -1)
-            {
-                //-1 is the parent, so we just set that
-                NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.SetComponentData(networkedEntity, localTransform);
-                continue;
-            }
-
-            NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.SetComponentData(GetChildFromChildMap(networkedEntity, entityChildMap), localTransform);
+            Entity child = GetChildFromChildMap(networkedEntity, message.GetInts());
+            networkSceneManager.NetworkWorld.EntityManager.SetComponentData(child, message.GetLocalTransform());
         }
     }
 
-    private static Entity GetChildFromChildMap(Entity parentRoot, short[] entityChildMap)
+    private static Entity GetChildFromChildMap(Entity parent, int[] map)
     {
-        foreach (short siblingIndex in entityChildMap)
-        {
-            DynamicBuffer<Child> childBuffer = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.GetBuffer<Child>(parentRoot);
+        EntityManager entityManager = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager;
 
-            parentRoot = childBuffer[siblingIndex].Value;
+        DynamicBuffer<Child> children = entityManager.GetBuffer<Child>(parent);
+
+        DynamicBuffer<Child> newChildren = default;
+
+        foreach (int childId in map)
+        {
+            if (newChildren.Length != 0) children = newChildren;
+
+            foreach (Child child in children)
+            {
+                if (!entityManager.HasComponent<NetworkedEntityChildComponent>(child.Value)) continue;
+
+                NetworkedEntityChildComponent networkedEntityChildComponent = entityManager.GetComponentData<NetworkedEntityChildComponent>(child.Value);
+
+                if (networkedEntityChildComponent.Id != childId) continue;
+
+                if (childId == map[^1]) return child.Value;
+
+                newChildren = entityManager.GetBuffer<Child>(child.Value);
+
+                break;
+            }
         }
 
-        return parentRoot;
+        throw new Exception("unable to find child entity");
     }
 }

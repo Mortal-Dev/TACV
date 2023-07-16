@@ -16,72 +16,99 @@ public partial struct NetworkEntitySyncSystem : ISystem
     {
         foreach (var (localTransformRecord, localTransform, networkedEntityComponent, entity) in SystemAPI.Query<RefRW<PreviousLocalTransformRecordComponent>, RefRO<LocalTransform>, RefRO<NetworkedEntityComponent>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithEntityAccess())
         {
-            //don't send a sync to ourself if we're host
-            if (NetworkManager.Instance.NetworkType == NetworkType.Host && networkedEntityComponent.ValueRO.connectionId == NetworkManager.CLIENT_NET_ID) continue;
+            bool updateLocalTransformOfParentEntity = false;
 
-            if (localTransform.ValueRO.Equals(localTransformRecord.ValueRO.localTransformRecord) || 
-                GetDirtyNetworkedChildrenComponents(SystemAPI.GetBuffer<LinkedEntityGroup>(entity), ref systemState, out List<NetworkedEntityChildLocalTransform> dirtyNetworkedChildren)) continue;
+            if (!localTransformRecord.ValueRO.localTransformRecord.Equals(localTransform.ValueRO))
+            {
+                updateLocalTransformOfParentEntity = true;
+                localTransformRecord.ValueRW.localTransformRecord = localTransform.ValueRO;
+            }
 
-            localTransformRecord.ValueRW.localTransformRecord = localTransform.ValueRO;
+            DynamicBuffer<Child> children = SystemAPI.GetBuffer<Child>(entity);
 
-            SendNetworkedEntitySyncMessage(networkedEntityComponent.ValueRO.networkEntityId, localTransform.ValueRO, dirtyNetworkedChildren);
+            List<NetworkedEntityChildMapLocalTransform> finalChangedChildrenMap = new List<NetworkedEntityChildMapLocalTransform>();
+
+            foreach (Child child in children)
+            {
+                List<NetworkedEntityChildMapLocalTransform> changedChildrenMaps = PathChangedChildren(child, ref systemState);
+
+                foreach (NetworkedEntityChildMapLocalTransform changedChildMap in changedChildrenMaps) finalChangedChildrenMap.Add(changedChildMap);
+            }
+
+            SendSyncMessage(networkedEntityComponent.ValueRO.networkEntityId, localTransform.ValueRO, updateLocalTransformOfParentEntity, finalChangedChildrenMap);
         }
     }
 
-    [BurstCompile]
-    private bool GetDirtyNetworkedChildrenComponents(DynamicBuffer<LinkedEntityGroup> linkedEntityGroupBuffer, ref SystemState systemState, out List<NetworkedEntityChildLocalTransform> dirtyNetworkedChildren)
+    private List<NetworkedEntityChildMapLocalTransform> PathChangedChildren(Child root, ref SystemState systemState)
     {
-        List<NetworkedEntityChildLocalTransform> networkedEntityChildComponents = new List<NetworkedEntityChildLocalTransform>();
+        List<NetworkedEntityChildMapLocalTransform> result = new List<NetworkedEntityChildMapLocalTransform>();
 
-        foreach (LinkedEntityGroup linkedEntityGroup in linkedEntityGroupBuffer)
+        FindChangedChildren(root, result, new NetworkedEntityChildMapLocalTransform(), ref systemState);
+
+        return result;
+    }
+
+    private void FindChangedChildren(Child root, List<NetworkedEntityChildMapLocalTransform> result, NetworkedEntityChildMapLocalTransform current, ref SystemState systemState)
+    {
+        if (!SystemAPI.HasComponent<NetworkedEntityChildComponent>(root.Value)) return;
+
+        NetworkedEntityChildComponent networkedEntityComponent = SystemAPI.GetComponent<NetworkedEntityChildComponent>(root.Value);
+        PreviousLocalTransformRecordComponent previousLocalTransformRecordComponent = SystemAPI.GetComponent<PreviousLocalTransformRecordComponent>(root.Value);
+        LocalTransform localTransform = SystemAPI.GetComponent<LocalTransform>(root.Value);
+
+        current.NetworkedEntityChildMap.Add(networkedEntityComponent.Id);
+
+        if (!localTransform.Equals(previousLocalTransformRecordComponent.localTransformRecord))
         {
-            if (!SystemAPI.HasComponent<NetworkedEntityChildComponent>(linkedEntityGroup.Value)) continue;
-
-            Entity entity = linkedEntityGroup.Value;
-
-            NetworkedEntityChildComponent networkedEntityChildComponent = SystemAPI.GetComponent<NetworkedEntityChildComponent>(entity);
-            LocalTransform localTransform = SystemAPI.GetComponent<LocalTransform>(entity);
-            PreviousLocalTransformRecordComponent previousLocalTransformRecordComponent = SystemAPI.GetComponent<PreviousLocalTransformRecordComponent>(entity);
-
-            if (previousLocalTransformRecordComponent.localTransformRecord.Equals(localTransform)) continue;
-
             previousLocalTransformRecordComponent.localTransformRecord = localTransform;
-
-            SystemAPI.SetComponent(entity, previousLocalTransformRecordComponent);
-
-            networkedEntityChildComponents.Add(new NetworkedEntityChildLocalTransform() { NetworkedEntityChildComponent = networkedEntityChildComponent, LocalTransform = localTransform } );
+            SystemAPI.SetComponent(root.Value, previousLocalTransformRecordComponent);
+            current.LocalTransform = localTransform;
+            result.Add(current);
         }
 
-        dirtyNetworkedChildren = networkedEntityChildComponents;
 
-        return networkedEntityChildComponents.Count == 0;
-    }
+        DynamicBuffer<Child> children = SystemAPI.GetBuffer<Child>(root.Value);
 
-    private void SendNetworkedEntitySyncMessage(ulong id, LocalTransform localTransform, List<NetworkedEntityChildLocalTransform> networkedEntityChildComponents)
-    {
-        Message message = Message.Create(MessageSendMode.Unreliable, NetworkManager.Instance.NetworkType == NetworkType.Host || NetworkManager.Instance.NetworkType == NetworkType.Server ? NetworkMessageId.ServerSyncEntity : NetworkMessageId.ClientSyncOwnedEntities);
-
-        message.Add(id);
-
-        networkedEntityChildComponents.Insert(0, new NetworkedEntityChildLocalTransform() { LocalTransform = localTransform, NetworkedEntityChildComponent = new NetworkedEntityChildComponent { childEntityMap = new FixedList128Bytes<short>() { -1 } } });
-
-        message.Add(networkedEntityChildComponents.Count);
-
-        foreach (NetworkedEntityChildLocalTransform networkedEntityChildComponent in networkedEntityChildComponents)
+        foreach (Child child in children)
         {
-            message.AddLocalTransform(networkedEntityChildComponent.LocalTransform);
-            message.Add(networkedEntityChildComponent.NetworkedEntityChildComponent.childEntityMap.ToArray());
+            FindChangedChildren(child, result, new NetworkedEntityChildMapLocalTransform() { NetworkedEntityChildMap = new List<int>(current.NetworkedEntityChildMap) }, ref systemState );
         }
-        
-        SendMode sendMode = NetworkManager.Instance.NetworkType == NetworkType.Host || NetworkManager.Instance.NetworkType == NetworkType.Server ? SendMode.Server : SendMode.Client;
 
-        NetworkManager.Instance.Network.SendMessage(message, sendMode);
+        return;
     }
+
+    private void SendSyncMessage(ulong parentNetworkedEntityId, LocalTransform parentNetworkedEntityTransform, bool updateNetworkedEntityTransform, List<NetworkedEntityChildMapLocalTransform> changedChildMap)
+    {
+        Message message = Message.Create(MessageSendMode.Unreliable, (ushort)(NetworkManager.Instance.NetworkType == NetworkType.Server || NetworkManager.Instance.NetworkType == NetworkType.Host ? NetworkMessageId.ServerSyncEntity : NetworkMessageId.ClientSyncOwnedEntities));
+
+        message.Add(parentNetworkedEntityId);
+
+        message.Add(updateNetworkedEntityTransform);
+
+        //child might update, but parent might not
+        if (updateNetworkedEntityTransform) message.AddLocalTransform(parentNetworkedEntityTransform);
+
+        message.Add(changedChildMap.Count);
+
+        foreach (NetworkedEntityChildMapLocalTransform networkedEntityChildMapLocalTransform in changedChildMap)
+        {
+            message.AddInts(networkedEntityChildMapLocalTransform.NetworkedEntityChildMap.ToArray());
+            message.AddLocalTransform(networkedEntityChildMapLocalTransform.LocalTransform);
+        }
+
+        NetworkManager.Instance.Network.SendMessage(message, NetworkManager.Instance.NetworkType == NetworkType.Server || NetworkManager.Instance.NetworkType == NetworkType.Host ? SendMode.Server : SendMode.Client);
+    }
+
 }
 
-public struct NetworkedEntityChildLocalTransform
+class NetworkedEntityChildMapLocalTransform
 {
-    public NetworkedEntityChildComponent NetworkedEntityChildComponent;
+    public List<int> NetworkedEntityChildMap;
 
     public LocalTransform LocalTransform;
+
+    public NetworkedEntityChildMapLocalTransform()
+    {
+        NetworkedEntityChildMap = new List<int>();
+    }
 }

@@ -12,6 +12,7 @@ using Unity.Jobs;
 using Unity.Physics.Systems;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
+[ClientSystem]
 [BurstCompile]
 public partial struct PlayerMovementSystem : ISystem
 {
@@ -19,6 +20,26 @@ public partial struct PlayerMovementSystem : ISystem
     public void OnUpdate(ref SystemState systemState)
     {
         SetPlayerRotation(ref systemState);
+
+        foreach (var (playerController, entity) in SystemAPI.Query<RefRW<PlayerControllerComponent>>().WithAll<PlayerControllerInputComponent>().WithAll<Simulate>().WithEntityAccess().WithAll<LocalOwnedNetworkedEntityComponent>())
+        {
+            switch (playerController.ValueRO.playerState)
+            {
+                case PlayerState.Moving:
+                    PlayerControllerMoving(playerController,
+                        SystemAPI.GetComponentRW<PhysicsVelocity>(entity),
+                        SystemAPI.GetComponentRW<LocalTransform>(entity),
+                        SystemAPI.GetComponentRO<PlayerControllerInputComponent>(entity));
+                    break;
+
+                case PlayerState.InAir:
+                    PlayerControllerInAir(playerController,
+                        SystemAPI.GetComponentRW<PhysicsVelocity>(entity));
+                    break;
+            }
+
+            return;
+        }
 
         foreach (var (playerController, entity) in SystemAPI.Query<RefRW<PlayerControllerComponent>>().WithAll<PlayerControllerInputComponent>().WithAll<Simulate>().WithEntityAccess())
         {

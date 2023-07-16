@@ -25,45 +25,49 @@ public class NetworkManager
 
     public static ushort CLIENT_NET_ID { get; private set; }
 
+    public static float TICKS_PER_SECOND { get; private set; }
+
     public void Tick() => Network?.Tick();
     
     public NetworkManager()
     {
+        NetworkSceneManager = new NetworkSceneManager();
+
         RiptideLogger.Initialize(Debug.Log, Debug.Log, Debug.LogWarning, Debug.LogError, false);
     }
 
     public void StartClient(string connection, float ticksPerSecond = 30)
     {
+        TICKS_PER_SECOND = ticksPerSecond;
+
         if (NetworkType == NetworkType.None) NetworkType = NetworkType.Client;
 
         Network = new ClientNetwork();
         Network.Start(new string[] { connection });
 
         ((ClientNetwork)Network).Client.Connected += (s, e) => CLIENT_NET_ID = ((ClientNetwork)Network).Client.Id;
-
-        NetworkSceneManager = new NetworkSceneManager(ticksPerSecond);
     }
 
     public void StartServer(ushort port, ushort maxPlayerCount, float ticksPerSecond = 30)
     {
+        TICKS_PER_SECOND = ticksPerSecond;
+
         if (NetworkType == NetworkType.None) NetworkType = NetworkType.Server;
 
         Network = new ServerNetwork();
         Network.Start(new string[] { port.ToString(), maxPlayerCount.ToString() });
-
-        NetworkSceneManager = new NetworkSceneManager(ticksPerSecond);
     }
 
     public void StartHost(ushort port, ushort maxPlayerCount, float ticksPerSecond = 30)
     {
+        TICKS_PER_SECOND = ticksPerSecond;
+
         if (NetworkType == NetworkType.None) NetworkType = NetworkType.Host;
 
         Network = new HostNetwork();
         Network.Start(new string[] { port.ToString(), maxPlayerCount.ToString() });
 
         ((HostNetwork)Network).Client.Connected += (s, e) => CLIENT_NET_ID = ((HostNetwork)Network).Client.Id;
-
-        NetworkSceneManager = new NetworkSceneManager(ticksPerSecond);
     }
 
     public void Stop()

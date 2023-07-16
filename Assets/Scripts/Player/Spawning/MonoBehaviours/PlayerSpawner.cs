@@ -11,6 +11,9 @@ public partial class PlayerSpawner : SystemBase
 {
     protected override void OnCreate()
     {
+        Debug.Log("created");
+
+
         if (NetworkManager.Instance.NetworkType == NetworkType.Host)
         {
             ((HostNetwork)NetworkManager.Instance.Network).Server.ClientConnected += OnClientConnected;
@@ -21,6 +24,11 @@ public partial class PlayerSpawner : SystemBase
         }
     }
 
+    protected override void OnDestroy()
+    {
+        Debug.Log("destroyed");
+    }
+
     protected override void OnUpdate()
     {
         
@@ -28,6 +36,8 @@ public partial class PlayerSpawner : SystemBase
 
     private void OnClientConnected(object sender, ServerConnectedEventArgs serverConnectedEventArgs)
     {
+        Debug.Log("client connected for spawn");
+
         NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.CreateNetworkedEntityFromIndex(0, serverConnectedEventArgs.Client.Id);
     }
 }

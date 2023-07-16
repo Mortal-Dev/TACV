@@ -5,6 +5,7 @@ using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Unity.Collections;
 
 public class NetworkSceneManager
 {
@@ -12,94 +13,99 @@ public class NetworkSceneManager
 
     public NetworkedEntityContainer NetworkedEntityContainer { get; private set; }
 
-    private readonly float ticksPerSecond;
-
-    public float TicksPerSecond 
-    {   
-        get
-        {
-            return ((FixedStepSimulationSystemGroup)NetworkWorld.GetExistingSystemManaged(typeof(FixedStepSimulationSystemGroup))).Timestep;
-        }
-    }
-
     private string sceneToLoadName;
-    
-    public NetworkSceneManager(float ticksPerSecond)
-    {
-        this.ticksPerSecond = ticksPerSecond;
-    }
+
+    AsyncOperation ao;
 
     public AsyncOperation LoadScene(string sceneName)
     {
+        Debug.Log(World.DefaultGameObjectInjectionWorld == null);
+
+        Debug.Log("called load scene");
+
         AsyncOperation newSceneOperation;
 
         sceneToLoadName = sceneName;
+
+        SceneFinishedLoadingSystem sceneFinishedLoadingSystem = (SceneFinishedLoadingSystem)World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged(typeof(SceneFinishedLoadingSystem));
 
         if (NetworkManager.Instance.NetworkType == NetworkType.Host || NetworkManager.Instance.NetworkType == NetworkType.Server)
         {
             newSceneOperation = SceneManager.LoadSceneAsync(sceneName);
 
+            Debug.Log("beginning loading scene");
+
             newSceneOperation.completed += (AsyncOperation ao) =>
             {
-                NetworkedEntityContainer.DestroyAllNetworkedEntities();
+                sceneFinishedLoadingSystem.StartChecking();
 
-                if (NetworkManager.Instance.NetworkType == NetworkType.Host)
+                sceneFinishedLoadingSystem.FinishedLoadingSubScenesCompleted += () =>
                 {
-                    NetworkWorld = CreateNetworkWorld<NetworkSystemBaseAttribute>("HostWorld", TicksPerSecond);
-                    NetworkedEntityContainer = new HostNetworkedEntityContainer(NetworkWorld.EntityManager);
-                }
-                else
-                {
-                    NetworkWorld = CreateNetworkWorld<ServerSystemAttribute>("ServerWorld", TicksPerSecond);
-                    NetworkedEntityContainer = new ServerNetworkedEntityContainer(NetworkWorld.EntityManager);
-                }
+                    NetworkedEntityContainer?.DestroyAllNetworkedEntities();
+
+                    if (NetworkManager.Instance.NetworkType == NetworkType.Host)
+                    {
+                        NetworkWorld = CreateNetworkWorld<NetworkSystemBaseAttribute>("HostWorld", NetworkManager.TICKS_PER_SECOND);
+                        NetworkedEntityContainer = new HostNetworkedEntityContainer(NetworkWorld.EntityManager);
+                        NetworkedEntityContainer.SetupSceneNetworkedEntities();
+                    }
+                    else
+                    {
+                        NetworkWorld = CreateNetworkWorld<ServerSystemAttribute>("ServerWorld", NetworkManager.TICKS_PER_SECOND);
+                        NetworkedEntityContainer = new ServerNetworkedEntityContainer(NetworkWorld.EntityManager);
+                        NetworkedEntityContainer.SetupSceneNetworkedEntities();
+                    }
+
+                    sceneFinishedLoadingSystem.StopChecking();
+                };
             };
 
-            NetworkedEntityContainer.SetupSceneNetworkedEntities();
             SendServerLoadSceneMessage(sceneName, NetworkManager.SERVER_NET_ID);
         }
         else
         {
             newSceneOperation = SceneManager.LoadSceneAsync(sceneName);
 
+            Debug.Log("beginning loading scene");
+
             newSceneOperation.completed += (AsyncOperation asyncOperation) =>
             {
-                NetworkedEntityContainer.DestroyAllNetworkedEntities();
-                NetworkedEntityContainer.SetupSceneNetworkedEntities();
-                SendClientCompletedSceneMessage();
+                sceneFinishedLoadingSystem.StartChecking();
+
+                sceneFinishedLoadingSystem.FinishedLoadingSubScenesCompleted += () =>
+                {
+                    NetworkedEntityContainer?.DestroyAllNetworkedEntities();
+
+                    NetworkWorld = CreateNetworkWorld<ClientSystemAttribute>("ClientWorld", NetworkManager.TICKS_PER_SECOND);
+
+                    NetworkedEntityContainer networkedEntityContainer = new ClientNetworkedEntityContainer(NetworkWorld.EntityManager);
+
+                    NetworkedEntityContainer.SetupSceneNetworkedEntities();
+                    SendClientCompletedSceneMessage();
+
+                    sceneFinishedLoadingSystem.StopChecking();
+                };
             };
         }
 
-        SetupNetworkScene();
-
-        World.DefaultGameObjectInjectionWorld = NetworkWorld;
+        SetupConnectionEvents();
 
         return newSceneOperation;
     }
 
     public AsyncOperation LoadScene(int sceneIndex) => LoadScene(SceneManager.GetSceneByBuildIndex(sceneIndex).name);
 
-    private void SetupNetworkScene()
+    private void SetupConnectionEvents()
     {
         switch (NetworkManager.Instance.NetworkType)
         {
-            case NetworkType.Client:
-                NetworkWorld = CreateNetworkWorld<ClientSystemAttribute>("ClientWorld", ticksPerSecond);
-                NetworkedEntityContainer = new ClientNetworkedEntityContainer(NetworkWorld.EntityManager);
-                break;
             case NetworkType.Server:
-                NetworkWorld = CreateNetworkWorld<ServerSystemAttribute>("ServerWorld", ticksPerSecond);
-                NetworkedEntityContainer = new ServerNetworkedEntityContainer(NetworkWorld.EntityManager);
-
                 ((ServerNetwork)NetworkManager.Instance.Network).Server.ClientConnected += (o, e) =>
                 {
                     SendServerLoadSceneMessage(sceneToLoadName, e.Client.Id);
                 };
                 break;
             case NetworkType.Host:
-                NetworkWorld = CreateNetworkWorld<NetworkSystemBaseAttribute>("HostWorld", ticksPerSecond);
-                NetworkedEntityContainer = new HostNetworkedEntityContainer(NetworkWorld.EntityManager);
-
                 ((HostNetwork)NetworkManager.Instance.Network).Server.ClientConnected += (o, e) =>
                 {
                     SendServerLoadSceneMessage(sceneToLoadName, e.Client.Id);
@@ -110,48 +116,54 @@ public class NetworkSceneManager
 
     private World CreateNetworkWorld<TNetworkSystemAttribute>(string worldName, float tickPerSecond) where TNetworkSystemAttribute : NetworkSystemBaseAttribute
     {
-        World world = new World(worldName, WorldFlags.Live);
+        Debug.Log("Creating networked world");
 
-        //clone entity prefab manager into networked world
-        NetworkedPrefabsComponent networkedPrefabEntity = World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkedPrefabsComponent>()).GetSingleton<NetworkedPrefabsComponent>();
-        Entity newEntity = world.EntityManager.CreateEntity();
-        world.EntityManager.AddComponent<NetworkedPrefabsComponent>(newEntity);
-        world.EntityManager.SetComponentData(newEntity, networkedPrefabEntity);
+        World world = new World(worldName, WorldFlags.None);
 
-        Type[] systemTypes = AttributeUsageFinder.GetUsages<TNetworkSystemAttribute>();
-
-        foreach (Type type in systemTypes)
-        {
-            world.CreateSystem(type);
-        }
-
-        DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, GetNonDisableAutoCreateSystem());
+        DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, RemoveOtherNetworkSystems<TNetworkSystemAttribute>());
 
         //shadow wizard casting gang (we love casting objects)
         ((FixedStepSimulationSystemGroup)world.GetExistingSystemManaged(typeof(FixedStepSimulationSystemGroup))).Timestep = 1f / tickPerSecond;
 
+        World.DefaultGameObjectInjectionWorld = world;
+
+        Debug.Log(World.DefaultGameObjectInjectionWorld.Systems.Count);
+
+        Debug.Log("created network world");
+
         return world;
     }
 
-    private List<Type> GetNonDisableAutoCreateSystem()
+    private List<Type> RemoveOtherNetworkSystems<TNetworkSystemAttribute>() where TNetworkSystemAttribute : NetworkSystemBaseAttribute
     {
         var systems = DefaultWorldInitialization.GetAllSystems(WorldSystemFilterFlags.All);
 
-        List<Type> nonDisableAutoCreateSystems = new List<Type>();
+        if (typeof(TNetworkSystemAttribute).Equals(typeof(NetworkSystemBaseAttribute))) return (List<Type>)systems;
+
+        List<Type> systemsToAdd = new List<Type>();
 
         foreach (Type system in systems)
         {
-            bool foundDisableAutoCreate = false;
+            bool foundNonDesirableSystem = false;
 
             foreach (var attribute in system.GetCustomAttributes(true))
             {
-                if (attribute.GetType().Equals(typeof(DisableAutoCreationAttribute)) && !attribute.GetType().Equals(typeof(NetworkSystemBaseAttribute))) foundDisableAutoCreate = true;
+                if (!attribute.GetType().Equals(typeof(TNetworkSystemAttribute)) && typeof(NetworkSystemBaseAttribute).IsAssignableFrom(attribute.GetType()))
+                {
+                    foundNonDesirableSystem = true;
+                    Debug.Log("system found");
+                    Debug.Log(system);
+                    break;
+                }
             }
 
-            if (!foundDisableAutoCreate) nonDisableAutoCreateSystems.Add(system);
+            if (!foundNonDesirableSystem) systemsToAdd.Add(system);
         }
 
-        return nonDisableAutoCreateSystems;
+        Debug.Log(systems.Count);
+        Debug.Log(systemsToAdd.Count);
+
+        return systemsToAdd;
     }
 
     private void SendClientCompletedSceneMessage()
@@ -234,7 +246,7 @@ public class NetworkSceneManager
         {
             KeyValuePair<ulong, Entity> idEntityPair = enumerator.Current;
 
-            if (NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.NetworkedEntities.ContainsKey(idEntityPair.Key)) continue;
+            if (NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.SceneEntitiesActive.ContainsKey(idEntityPair.Key)) continue;
 
             NetworkedEntityComponent networkedEntityComponent = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.GetComponentData<NetworkedEntityComponent>(idEntityPair.Value);
 

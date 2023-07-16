@@ -8,6 +8,7 @@ using Unity.Collections;
 using Unity.Physics;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
+[ClientSystem]
 public partial class PlayerInputSystem : SystemBase
 {
     XRIDefaultInputActions xriDefaultInputActions;

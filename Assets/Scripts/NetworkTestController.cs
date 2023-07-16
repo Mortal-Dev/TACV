@@ -18,8 +18,9 @@ public class NetworkTestController : MonoBehaviour
 
     private IEnumerator DelayServerStart()
     {
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(3f);
 
-       // NetworkManager.Instance.StartHost(696, 2);
+        NetworkManager.Instance.StartServer(696, 2);
+        NetworkManager.Instance.NetworkSceneManager.LoadScene("Game");
     }
 }

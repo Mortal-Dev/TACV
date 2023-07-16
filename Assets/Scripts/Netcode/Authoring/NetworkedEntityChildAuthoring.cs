@@ -14,53 +14,13 @@ public class NetworkedEntityChildAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
 
-            FixedList128Bytes<short> childEntityMap = CalulateEntityChildMap(authoring.gameObject);
+            NetworkedEntityChildComponent component = new NetworkedEntityChildComponent() { Id = random.Next(int.MinValue, int.MaxValue) };
+
+            //impossible for id to be set to zero again, so we re roll if it is set, 0 is an id later used to identity the parent entity in the network sync message
+            if (component.Id == 0) component.Id = random.Next(int.MinValue, int.MaxValue);
 
             AddComponent(entity, new NetworkedEntityChildComponent() { Id =  random.Next(int.MinValue, int.MaxValue) } );
             AddComponent(entity, new PreviousLocalTransformRecordComponent() { localTransformRecord = new LocalTransform() { Position = authoring.transform.localPosition, Rotation = authoring.transform.localRotation, Scale = authoring.transform.localScale.y } });
-        }
-
-        private FixedList128Bytes<short> CalulateEntityChildMap(GameObject childGameObject)
-        {
-            Transform root = childGameObject.transform.root;
-
-            Transform traversalTransform = childGameObject.transform;
-
-            List<short> childMap = new List<short>();
-
-            while (traversalTransform != root)
-            {
-                childMap.Add(FindGameObjectIndex(traversalTransform, traversalTransform.parent.GetComponentsInChildren<Transform>()));
-
-                traversalTransform = traversalTransform.parent;
-            }
-
-            //reverse since we will be using it from parent to child instead of child to parent later
-            childMap.Reverse();
-
-            return FillFixedList(childMap.ToArray());
-        }
-
-        private short FindGameObjectIndex(Transform gameObject, Transform[] siblings)
-        {
-            for (int i = 0; i < siblings.Length; i++)
-            {
-                if (siblings[i] == gameObject) return (short)i;
-            }
-
-            throw new System.Exception("unable to find gameobject");
-        }
-
-        private FixedList128Bytes<short> FillFixedList(short[] shorts)
-        {
-            FixedList128Bytes<short> fixedListShorts = new FixedList128Bytes<short>();
-
-            foreach (short value in shorts)
-            {
-                fixedListShorts.Add(value);
-            }
-
-            return fixedListShorts;
         }
     }
 }

@@ -38,7 +38,7 @@ public class HostNetwork : INetwork
         Server = null;
     }
 
-    public void SendMessage(Message message, SendMode sendMode = SendMode.Client, ushort sendTo = ushort.MaxValue)
+    public void SendMessage(Message message, SendMode sendMode, ushort sendTo = ushort.MaxValue)
     {
         if (sendMode == SendMode.None)
         {

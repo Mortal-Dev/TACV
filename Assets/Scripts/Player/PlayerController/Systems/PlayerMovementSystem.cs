@@ -11,14 +11,16 @@ using UnityEngine;
 using Unity.Jobs;
 using Unity.Physics.Systems;
 
-[UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 [ClientSystem]
+[UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 [BurstCompile]
 public partial struct PlayerMovementSystem : ISystem
 {
     [BurstCompile]
     public void OnUpdate(ref SystemState systemState)
     {
+        if (NetworkManager.Instance.NetworkType == NetworkType.Server) return;
+
         SetPlayerRotation(ref systemState);
 
         foreach (var (playerController, entity) in SystemAPI.Query<RefRW<PlayerControllerComponent>>().WithAll<PlayerControllerInputComponent>().WithAll<Simulate>().WithEntityAccess().WithAll<LocalOwnedNetworkedEntityComponent>())

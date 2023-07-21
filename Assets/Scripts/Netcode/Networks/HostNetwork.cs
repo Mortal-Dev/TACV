@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using Riptide;
+using UnityEngine.SceneManagement;
+using Unity.Entities;
 
 public class HostNetwork : INetwork
 {
@@ -14,7 +16,6 @@ public class HostNetwork : INetwork
         Server.Start(ushort.Parse(args[0]), ushort.Parse(args[1]));
 
         Client = new Client();
-        Client.Connect("127.0.0.1" + ":" + args[0]);
     }
 
     public void Tick()

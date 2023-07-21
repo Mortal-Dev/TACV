@@ -6,8 +6,6 @@ using UnityEngine;
 using Unity.XR.CoreUtils;
 using Unity.Mathematics;
 
-//run only on client, but also in the default scene when we're not in a network
-[ClientSystem]
 [UpdateInGroup(typeof(PresentationSystemGroup))]
 public partial class SyncLocalPlayerToXROriginSystem : SystemBase
 {
@@ -23,6 +21,8 @@ public partial class SyncLocalPlayerToXROriginSystem : SystemBase
 
     protected override void OnUpdate()
     {
+        if (NetworkManager.Instance.NetworkType == NetworkType.Server) return;
+
         if (!setXRTransformObjects) SetXRGameObjects();
 
         if (localHeadGameObject == null || localLeftHandGameObject == null || localRightHandGameObject == null) return;

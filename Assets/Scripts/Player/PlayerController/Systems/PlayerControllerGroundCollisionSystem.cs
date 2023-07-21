@@ -10,21 +10,23 @@ using Unity.Transforms;
 using Unity.Jobs;
 using System;
 
+[ClientSystem]
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 [UpdateBefore(typeof(PlayerMovementSystem))]
-[ClientSystem]
 [BurstCompile]
 public partial struct PlayerControllerGroundCollisionSystem : ISystem
 {
     [BurstCompile]
     public void OnCreate(ref SystemState systemState)
     {
-        UnityEngine.Debug.Log("created player controller system");
+        ManagedNetworkSystems.AddManagedNetworkSystem(systemState.SystemHandle, NetworkType.Client);
     }
 
     [BurstCompile]
     public void OnUpdate(ref SystemState systemState)
     {
+        if (NetworkManager.Instance.NetworkType == NetworkType.Server) return;
+
         if (!SystemAPI.HasSingleton<PhysicsWorldSingleton>()) return;
 
         foreach (var (localTransfrom, playerControllerCmponent) in SystemAPI.Query<RefRO<LocalTransform>, RefRW<PlayerControllerComponent>>().WithAll<LocalOwnedNetworkedEntityComponent>())

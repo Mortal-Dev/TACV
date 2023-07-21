@@ -20,7 +20,7 @@ public class NetworkTestController : MonoBehaviour
     {
         yield return new WaitForSeconds(3f);
 
-        NetworkManager.Instance.StartServer(696, 2);
-        NetworkManager.Instance.NetworkSceneManager.LoadScene("Game");
+        NetworkManager.Instance.StartHost(696, 2, "Game");
+       // NetworkManager.Instance.NetworkSceneManager.LoadScene("Game");
     }
 }

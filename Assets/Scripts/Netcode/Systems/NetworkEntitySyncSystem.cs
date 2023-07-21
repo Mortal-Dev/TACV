@@ -5,15 +5,16 @@ using Unity.Burst;
 using Unity.Collections;
 using Riptide;
 
-[DisableAutoCreation]
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-[NetworkSystemBase]
 [BurstCompile]
 public partial struct NetworkEntitySyncSystem : ISystem
 {
+
     [BurstCompile]
     public void OnUpdate(ref SystemState systemState)
     {
+        if (NetworkManager.Instance.NetworkType == NetworkType.None) return;
+
         foreach (var (localTransformRecord, localTransform, networkedEntityComponent, entity) in SystemAPI.Query<RefRW<PreviousLocalTransformRecordComponent>, RefRO<LocalTransform>, RefRO<NetworkedEntityComponent>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithEntityAccess())
         {
             bool updateLocalTransformOfParentEntity = false;

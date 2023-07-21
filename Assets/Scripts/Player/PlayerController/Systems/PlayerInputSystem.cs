@@ -7,8 +7,8 @@ using Unity.Transforms;
 using Unity.Collections;
 using Unity.Physics;
 
-[UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 [ClientSystem]
+[UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 public partial class PlayerInputSystem : SystemBase
 {
     XRIDefaultInputActions xriDefaultInputActions;
@@ -21,6 +21,8 @@ public partial class PlayerInputSystem : SystemBase
 
     protected override void OnUpdate()
     {
+        if (NetworkManager.Instance.NetworkType == NetworkType.Server) return;
+
         if (NetworkManager.Instance.NetworkType == NetworkType.None)
         {
             foreach (RefRW<PlayerControllerInputComponent> playerInput in SystemAPI.Query<RefRW<PlayerControllerInputComponent>>()) SetInputs(playerInput);

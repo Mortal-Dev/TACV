@@ -9,8 +9,6 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
 {
     private readonly Dictionary<ulong, Entity> networkedEntities;
 
-    private RefRO<NetworkedPrefabsComponent> networkedPrefabsComponent;
-
     private EntityManager clientEntityManager;
 
     public ClientNetworkedEntityContainer(EntityManager clientEntityManager)
@@ -29,11 +27,11 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
 
     public override ulong CreateNetworkedEntity(int networkedPrefabHash, ushort connectionOwnerId = NetworkManager.SERVER_NET_ID, ulong networkEntityId = ulong.MaxValue)
     {
-        if (!networkedPrefabsComponent.IsValid) SetNetworkedPrefabsComponent();
+        Entity entityPrefab = GetNetworkedPrefab(networkedPrefabHash);
 
-        if (!networkedPrefabsComponent.ValueRO.TryGetEntity(networkedPrefabHash, out Entity networkedEntityPrefab)) throw new Exception($"unable to find prefab hash: {networkedPrefabHash}");
+        if (entityPrefab == Entity.Null) throw new Exception($"unable to find entity hash for prefab entity with hash: " + networkedPrefabHash);
 
-        Entity spawnedNetworkedEntity = clientEntityManager.Instantiate(networkedEntityPrefab);
+        Entity spawnedNetworkedEntity = clientEntityManager.Instantiate(entityPrefab);
 
         clientEntityManager.SetComponentData(spawnedNetworkedEntity, new NetworkedEntityComponent() { networkEntityId = networkEntityId, connectionId = connectionOwnerId });
 
@@ -61,13 +59,6 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
         }
 
         networkedEntities.Clear();
-    }
-
-    private void SetNetworkedPrefabsComponent()
-    {
-        using EntityQuery entityQuery = clientEntityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkedPrefabsComponent>());
-
-        networkedPrefabsComponent = (RefRO<NetworkedPrefabsComponent>)entityQuery.GetSingletonRW<NetworkedPrefabsComponent>();
     }
 
     [MessageHandler((ushort)NetworkMessageId.ServerSpawnEntity)]

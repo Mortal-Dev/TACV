@@ -12,8 +12,6 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
 
     private IdGenerator networkIdGenerator;
 
-    private RefRO<NetworkedPrefabsComponent> networkedPrefabsComponent;
-
     private EntityManager serverEntityManager;
 
     public ServerNetworkedEntityContainer(EntityManager serverEntityManager)
@@ -34,11 +32,9 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
 
     public override ulong ActivateNetworkedEntity(Entity entity)
     {
-        if (!networkedPrefabsComponent.IsValid) SetNetworkedPrefabsComponent();
-
         NetworkedEntityComponent networkedEntityComponent = serverEntityManager.GetComponentData<NetworkedEntityComponent>(entity);
 
-        if (!networkedPrefabsComponent.ValueRO.TryGetEntity(networkedEntityComponent.networkedPrefabHash, out Entity _)) throw new Exception($"unable to find entity hash for unactivated entity");
+        if (GetNetworkedPrefab(networkedEntityComponent.networkedPrefabHash) == Entity.Null) throw new Exception($"unable to find entity hash for unactivated entity with index: " + entity.Index);
 
         ulong id = networkIdGenerator.GenerateId();
 
@@ -55,10 +51,8 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
 
     public override ulong CreateNetworkedEntity(int networkedPrefabHash, ushort connectionOwnerId = NetworkManager.SERVER_NET_ID, ulong networkEntityId = ulong.MaxValue)
     {
-        if (!networkedPrefabsComponent.IsValid) SetNetworkedPrefabsComponent();
+        if (TryGetNetworkedPrefab(networkedPrefabHash, out Entity networkedPrefabEntity)) throw new Exception($"unable to find entity hash {networkedPrefabHash}");
 
-        if (!networkedPrefabsComponent.ValueRO.TryGetEntity(networkedPrefabHash, out Entity networkedPrefabEntity)) throw new Exception($"unable to find entity hash {networkedPrefabHash}");
-        
         if (!serverEntityManager.HasComponent(networkedPrefabEntity, typeof(NetworkedEntityComponent))) throw new Exception("attempting to instantiate networked entity without a networked entity component");
 
         Entity entity = serverEntityManager.Instantiate(networkedPrefabEntity);
@@ -98,13 +92,6 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
 
         networkIdGenerator = new IdGenerator();
         networkedEntities.Clear();
-    }
-
-    private void SetNetworkedPrefabsComponent()
-    {
-        using EntityQuery entityQuery = serverEntityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkedPrefabsComponent>());
-
-        networkedPrefabsComponent = (RefRO<NetworkedPrefabsComponent>)entityQuery.GetSingletonRW<NetworkedPrefabsComponent>();
     }
 
     private void SendSpawnNetworkedEntityMessage(int prefabHash, ushort connectionOwnerId, LocalTransform localTransform, ushort sendToClientId = NetworkManager.SERVER_NET_ID)

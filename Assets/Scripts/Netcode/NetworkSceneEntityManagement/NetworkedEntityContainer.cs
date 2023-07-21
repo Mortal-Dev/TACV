@@ -18,7 +18,7 @@ public abstract class NetworkedEntityContainer
         SceneEntitiesActive = new Dictionary<ulong, bool>();
     }
 
-    public IEnumerator<KeyValuePair<ulong, Entity>> GetEntities()
+    public IEnumerator<KeyValuePair<ulong, Entity>> GetEnumerator()
     {
         return NetworkedEntities.GetEnumerator();
     }
@@ -32,33 +32,11 @@ public abstract class NetworkedEntityContainer
 
     public abstract ulong ActivateNetworkedEntity(Entity entity);
 
-    public ulong CreateNetworkedEntityFromIndex(short prefabIndex, ushort connectionOwnerId = NetworkManager.SERVER_NET_ID, ulong networkEntityId = ulong.MaxValue)
-    {
-        EntityManager entityManager = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager;
-
-        using EntityQuery entityQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkedPrefabsComponent>());
-
-        NetworkedPrefabsComponent networkedPrefabsComponent = entityQuery.GetSingleton<NetworkedPrefabsComponent>();
-
-        int prefabHash = networkedPrefabsComponent.hashCodes[prefabIndex];
-
-        return CreateNetworkedEntity(prefabHash, connectionOwnerId, networkEntityId);
-    }
-
     public ulong CreateNetworkedEntity(Entity networkedEntityPrefab, ushort connectionOwnerId = NetworkManager.SERVER_NET_ID, ulong networkEntityId = ulong.MaxValue)
     {
-        EntityManager entityManager = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager;
+        NetworkedEntityComponent networkedEntityComponent = World.DefaultGameObjectInjectionWorld.EntityManager.GetComponentData<NetworkedEntityComponent>(networkedEntityPrefab);
 
-        using EntityQuery entityQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkedPrefabsComponent>());
-
-        NetworkedPrefabsComponent networkedPrefabsComponent = entityQuery.GetSingleton<NetworkedPrefabsComponent>();
-
-        for (int i = 0; i < networkedPrefabsComponent.prefabs.Length; i++)
-        {
-            if (networkedPrefabsComponent.prefabs[i].Equals(networkedEntityPrefab)) return CreateNetworkedEntity(networkedPrefabsComponent.hashCodes[i], connectionOwnerId, networkEntityId);
-        }
-
-        throw new System.Exception("unable to find entity from prefab");
+        return CreateNetworkedEntity(networkedEntityComponent.networkedPrefabHash, connectionOwnerId, networkEntityId);
     }
 
     public abstract void DestroyNetworkedEntity(ulong id);
@@ -67,6 +45,8 @@ public abstract class NetworkedEntityContainer
 
     public void SetupSceneNetworkedEntities()
     {
+        UnityEngine.Debug.Log("begin scene networked entities setup");
+
         SceneEntitiesActive.Clear();
 
         EntityManager entityManager = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager;
@@ -83,5 +63,50 @@ public abstract class NetworkedEntityContainer
         }
 
         networkedEntities.Dispose();
+
+        UnityEngine.Debug.Log("finished scene networked entities setup");
+    }
+
+    public Entity GetNetworkedPrefab(int networkedPrefabHash)
+    {
+        EntityManager entityManager = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager;
+
+        EntityQuery entityQuery = entityManager.CreateEntityQuery(typeof(NetworkedPrefabComponent));
+
+        NativeArray<NetworkedPrefabComponent> prefabs = entityQuery.ToComponentDataArray<NetworkedPrefabComponent>(Allocator.Temp);
+
+        foreach (NetworkedPrefabComponent networkedPrefabComponent in prefabs)
+        {
+            NetworkedEntityComponent networkedEntityComponent = entityManager.GetComponentData<NetworkedEntityComponent>(networkedPrefabComponent.prefab);
+
+            if (networkedEntityComponent.networkedPrefabHash == networkedPrefabHash) return networkedPrefabComponent.prefab;
+        }
+
+        UnityEngine.Debug.LogError("unable to find hash: " + networkedPrefabHash);
+        return Entity.Null;
+    }
+
+    public bool TryGetNetworkedPrefab(int networkedPrefabHash, out Entity networkedPrefab)
+    {
+        networkedPrefab = Entity.Null;
+
+        EntityManager entityManager = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager;
+
+        EntityQuery entityQuery = entityManager.CreateEntityQuery(typeof(NetworkedPrefabComponent));
+
+        NativeArray<NetworkedPrefabComponent> prefabs = entityQuery.ToComponentDataArray<NetworkedPrefabComponent>(Allocator.Temp);
+
+        foreach (NetworkedPrefabComponent networkedPrefabComponent in prefabs)
+        {
+            NetworkedEntityComponent networkedEntityComponent = entityManager.GetComponentData<NetworkedEntityComponent>(networkedPrefabComponent.prefab);
+
+            if (networkedEntityComponent.networkedPrefabHash == networkedPrefabHash)
+            {
+                networkedPrefab = networkedPrefabComponent.prefab;
+                return true;
+            }
+        }
+
+        return false;
     }
 }

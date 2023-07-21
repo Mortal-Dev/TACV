@@ -33,15 +33,15 @@ public class HostNetworkedEntityContainer : NetworkedEntityContainer
 
         Entity entity = hostEntityManager.Instantiate(entityPrefab);
 
-        ulong id = networkIdGenerator.GenerateId();
+        ulong networkId = networkIdGenerator.GenerateId();
 
-        hostEntityManager.SetComponentData(entity, new NetworkedEntityComponent() { connectionId = connectionOwnerId, networkEntityId = id });
+        hostEntityManager.SetComponentData(entity, new NetworkedEntityComponent() { connectionId = connectionOwnerId, networkEntityId = networkId, networkedPrefabHash = networkedPrefabHash });
 
-        networkedEntities.Add(id, entity);
+        networkedEntities.Add(networkId, entity);
 
-        SendSpawnNetworkedEntityMessage(networkedPrefabHash, connectionOwnerId, hostEntityManager.GetComponentData<LocalTransform>(entity));
+        SendSpawnNetworkedEntityMessage(networkedPrefabHash, connectionOwnerId, hostEntityManager.GetComponentData<LocalTransform>(entity), networkId);
 
-        return id;
+        return networkId;
     }
 
     public override ulong ActivateNetworkedEntity(Entity entity)
@@ -50,17 +50,17 @@ public class HostNetworkedEntityContainer : NetworkedEntityContainer
 
         if (GetNetworkedPrefab(networkedEntityComponent.networkedPrefabHash) == Entity.Null) throw new Exception($"unable to find entity hash for unactivated entity with index: " + entity.Index);
 
-        ulong id = networkIdGenerator.GenerateId();
+        ulong networkId = networkIdGenerator.GenerateId();
 
-        networkedEntityComponent.networkEntityId = id;
+        networkedEntityComponent.networkEntityId = networkId;
 
-        networkedEntities.Add(id, entity);
+        networkedEntities.Add(networkId, entity);
 
-        SendSpawnNetworkedEntityMessage(networkedEntityComponent.networkedPrefabHash, networkedEntityComponent.connectionId, hostEntityManager.GetComponentData<LocalTransform>(entity));
+        SendSpawnNetworkedEntityMessage(networkedEntityComponent.networkedPrefabHash, networkedEntityComponent.connectionId, hostEntityManager.GetComponentData<LocalTransform>(entity), networkId);
 
         hostEntityManager.SetComponentData(entity, networkedEntityComponent);
 
-        return id;
+        return networkId;
     }
 
     public override void DestroyNetworkedEntity(ulong id)
@@ -87,7 +87,7 @@ public class HostNetworkedEntityContainer : NetworkedEntityContainer
         networkedEntities.Clear();
     }
 
-    private void SendSpawnNetworkedEntityMessage(int prefabHash, ushort connectionOwnerId, LocalTransform localTransform, ushort sendToClientId = NetworkManager.SERVER_NET_ID)
+    private void SendSpawnNetworkedEntityMessage(int prefabHash, ushort connectionOwnerId, LocalTransform localTransform, ulong networkId, ushort sendToClientId = NetworkManager.SERVER_NET_ID)
     {
         Message message;
 
@@ -115,6 +115,7 @@ public class HostNetworkedEntityContainer : NetworkedEntityContainer
 
             message.Add(prefabHash);
             message.Add(connectionOwnerId);
+            message.Add(networkId);
             message.AddLocalTransform(localTransform);
 
             return message;

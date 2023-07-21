@@ -33,7 +33,7 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
 
         Entity spawnedNetworkedEntity = clientEntityManager.Instantiate(entityPrefab);
 
-        clientEntityManager.SetComponentData(spawnedNetworkedEntity, new NetworkedEntityComponent() { networkEntityId = networkEntityId, connectionId = connectionOwnerId });
+        clientEntityManager.SetComponentData(spawnedNetworkedEntity, new NetworkedEntityComponent() { networkEntityId = networkEntityId, connectionId = connectionOwnerId, networkedPrefabHash = networkedPrefabHash });
 
         if (networkEntityId == NetworkManager.CLIENT_NET_ID) clientEntityManager.AddComponent(spawnedNetworkedEntity, ComponentType.ReadWrite(typeof(LocalOwnedNetworkedEntityComponent)));
         
@@ -64,14 +64,13 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
     [MessageHandler((ushort)NetworkMessageId.ServerSpawnEntity)]
     private static void SpawnNetworkedEntityRecieved(Message message)
     {
-        UnityEngine.Debug.Log("server spawn");
-
         int networkedPrefabHash = message.GetInt();
         ushort ownerId = message.GetUShort();
+        ulong networkId = message.GetULong();
         LocalTransform localTransform = message.GetLocalTransform();
 
-        ulong networkEntityId = NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.CreateNetworkedEntity(networkedPrefabHash, ownerId);
-        Entity networkEntity = NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetEntity(networkEntityId);
+        NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.CreateNetworkedEntity(networkedPrefabHash, ownerId, networkId);
+        Entity networkEntity = NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetEntity(networkId);
 
         NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.SetComponentData(networkEntity, localTransform);
     }

@@ -59,7 +59,7 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
 
         ulong id = networkIdGenerator.GenerateId();
 
-        serverEntityManager.SetComponentData(entity, new NetworkedEntityComponent() { connectionId = connectionOwnerId, networkEntityId = id });
+        serverEntityManager.SetComponentData(entity, new NetworkedEntityComponent() { connectionId = connectionOwnerId, networkEntityId = id, networkedPrefabHash = networkedPrefabHash });
 
         networkedEntities.Add(id, entity);
 

@@ -1,0 +1,12 @@
+using Unity.Entities;
+
+public partial struct StabilatorComponent : IComponentData
+{
+    public float currentPitchDegrees;
+
+    public float maxPositivePitchAuthorityDegrees;
+
+    public float maxNegativePitchAuthorityDegrees;
+
+    public float area;
+}

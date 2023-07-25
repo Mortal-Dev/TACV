@@ -37,6 +37,8 @@ public class NetworkSceneManager
 
                 sceneFinishedLoadingSystem.FinishedLoadingSubScenesCompleted += () =>
                 {
+                    sceneFinishedLoadingSystem.StopChecking();
+
                     NetworkedEntityContainer?.DestroyAllNetworkedEntities();
 
                     if (NetworkManager.Instance.NetworkType == NetworkType.Host)
@@ -54,9 +56,10 @@ public class NetworkSceneManager
                         NetworkWorld = World.DefaultGameObjectInjectionWorld;
                         NetworkedEntityContainer = new ServerNetworkedEntityContainer(NetworkWorld.EntityManager);
                         NetworkedEntityContainer.SetupSceneNetworkedEntities();
+
                     }
 
-                    sceneFinishedLoadingSystem.StopChecking();
+                    ((FixedStepSimulationSystemGroup)NetworkWorld.GetExistingSystemManaged(typeof(FixedStepSimulationSystemGroup))).Timestep = 1f / NetworkManager.TICKS_PER_SECOND;
                 };
             };
 
@@ -85,6 +88,7 @@ public class NetworkSceneManager
                     NetworkedEntityContainer.SetupSceneNetworkedEntities();
                     SendClientCompletedSceneMessage();
 
+                    ((FixedStepSimulationSystemGroup)NetworkWorld.GetExistingSystemManaged(typeof(FixedStepSimulationSystemGroup))).Timestep = 1f / NetworkManager.TICKS_PER_SECOND;
                 };
             };
         }
@@ -114,63 +118,6 @@ public class NetworkSceneManager
                 break;
         }
     }
-
-    /*private World CreateNetworkWorld<TNetworkSystemAttribute>(string worldName, float tickPerSecond) where TNetworkSystemAttribute : NetworkSystemBaseAttribute
-    {
-        Debug.Log("Creating networked world");
-
-        World networkWorld = new World(worldName, WorldFlags.Live);
-
-        PopulateSystems(networkWorld, typeof(TNetworkSystemAttribute));
-
-        //shadow wizard casting gang (we love casting objects)
-        ((FixedStepSimulationSystemGroup)networkWorld.GetExistingSystemManaged(typeof(FixedStepSimulationSystemGroup))).Timestep = 1f / tickPerSecond;
-
-        Debug.Log("created network world");
-
-        return networkWorld;
-    }
-
-    private void PopulateSystems(World networkWorld, Type correctNetworkType)
-    {
-        if (NetworkManager.Instance.NetworkType == NetworkType.Host)
-        {
-            DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(networkWorld, DefaultWorldInitialization.GetAllSystems(WorldSystemFilterFlags.All));
-            return;
-        }
-
-        List<Type> systemTypes = (List<Type>)DefaultWorldInitialization.GetAllSystems(WorldSystemFilterFlags.All);
-
-        Debug.Log("here");
-
-        Debug.Log(DefaultWorldInitialization.GetAllSystems(WorldSystemFilterFlags.ClientSimulation).Count);
-
-        List<Type> systemsToRemove = new List<Type>();
-
-        foreach (Type systemType in systemTypes)
-        {
-            bool hasCorrectNetworkAttribute = false;
-            bool hasNetworkAttribute = false;
-
-            foreach (var attribute in systemType.GetCustomAttributes(false))
-            {
-                if (attribute.GetType().Equals(correctNetworkType) || attribute.GetType().IsSubclassOf(typeof(NetworkSystemBaseAttribute)))
-                    hasNetworkAttribute = true;
-
-                if (attribute.GetType().Equals(correctNetworkType))
-                    hasCorrectNetworkAttribute = true;
-            }
-
-            if (hasNetworkAttribute && !hasCorrectNetworkAttribute)
-            {
-                systemsToRemove.Add(systemType);
-            }
-        }
-
-        foreach (Type systemToRemoveType in systemsToRemove) systemTypes.Remove(systemToRemoveType);
-
-        foreach (Type systemType in systemTypes) networkWorld.CreateSystem(systemType);
-    }*/
 
     private void SendClientCompletedSceneMessage()
     {

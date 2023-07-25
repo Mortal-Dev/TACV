@@ -15,19 +15,17 @@ public partial class SyncLocalPlayerToXROriginSystem : SystemBase
     public GameObject localLeftHandGameObject;
     public GameObject localRightHandGameObject;
 
-    public bool setXRTransformObjects = false;
-
     bool foundLocalVRObjects = true;
 
     protected override void OnUpdate()
     {
         if (NetworkManager.Instance.NetworkType == NetworkType.Server) return;
 
-        if (!setXRTransformObjects) SetXRGameObjects();
-
-        if (localHeadGameObject == null || localLeftHandGameObject == null || localRightHandGameObject == null) return;
-
-        setXRTransformObjects = true;
+        if (localHeadGameObject == null || localLeftHandGameObject == null || localRightHandGameObject == null)
+        {
+            SetXRGameObjects();
+            return;
+        }
 
         SetPositionOfXROriginToEntity();
 

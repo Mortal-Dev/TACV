@@ -1,18 +1,23 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Entities;
 
 public class FlapAuthoring : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public float maxFlapDegree;
 
-    // Update is called once per frame
-    void Update()
+    public float maxDrag;
+
+    public float maxLift;
+
+    class Baking : Baker<FlapAuthoring>
     {
-        
+        public override void Bake(FlapAuthoring authoring)
+        {
+            Entity entity = GetEntity(TransformUsageFlags.Dynamic);
+
+            AddComponent(entity, new FlapComponent() { maxFlapDegree = authoring.maxFlapDegree, maxDrag = authoring.maxDrag, maxLift = authoring.maxLift });
+        }
     }
 }

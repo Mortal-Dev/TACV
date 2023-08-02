@@ -1,18 +1,19 @@
-using System.Collections;
-using System.Collections.Generic;
+using Unity.Entities;
 using UnityEngine;
 
 public class AirBrakeAuthoring : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public float maxDrag;
 
-    // Update is called once per frame
-    void Update()
+    public float timeToDeploy;
+
+    class Baking : Baker<AirBrakeAuthoring>
     {
-        
+        public override void Bake(AirBrakeAuthoring authoring)
+        {
+            Entity entity = GetEntity(TransformUsageFlags.Dynamic);
+
+            AddComponent(entity, new AirBrakeComponent() { maxDrag = authoring.maxDrag, timeToDeploy = authoring.timeToDeploy });
+        }
     }
 }

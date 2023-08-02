@@ -1,0 +1,22 @@
+﻿using Unity.Entities;
+using UnityEngine;
+
+public class FixedWingAuthoring : MonoBehaviour
+{
+    public string aircraftName;
+
+    public string aircraftBerevityCode;
+
+    public AnimationCurve liftCurve;
+
+    class Baking : Baker<FixedWingAuthoring>
+    {
+        public override void Bake(FixedWingAuthoring authoring)
+        {
+            Entity entity = GetEntity(TransformUsageFlags.Dynamic);
+
+            AddComponent(entity, new FixedWingComponent());
+            AddComponent(entity, new UninitializedFixedWingComponent());
+        }
+    }
+}

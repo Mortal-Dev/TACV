@@ -4,7 +4,15 @@ using Unity.Collections;
 
 public partial struct FixedWingComponent : IComponentData
 {
+    public float throttle;
+
+    public float angleOfAttack;
+
+    public float angleOfAttackYaw;
+
     public float3 gForce;
+
+    public float3 maximumGForces;
 
     public float3 lastVelocity;
 
@@ -12,15 +20,27 @@ public partial struct FixedWingComponent : IComponentData
 
     public float3 localAngularVelocity;
 
-    public FixedList128Bytes<RefRW<EngineComponent>> engineComponents;
+    public FixedAnimationCurve aoaLiftCurve;
 
-    public FixedList128Bytes<RefRW<RudderComponent>> rudderComponents;
+    public FixedAnimationCurve leftSideDrag;
 
-    public FixedList128Bytes<RefRW<FlapComponent>> flapComponents;
+    public FixedAnimationCurve rightSideDrag;
 
-    public FixedList128Bytes<RefRW<StabilatorComponent>> stabilatorComponents;
+    public FixedAnimationCurve topDrag;
 
-    public FixedList128Bytes<RefRW<AirleronComponent>> airleronComponents;
+    public FixedAnimationCurve beneathDrag;
 
-    public float throttle;
+    public FixedAnimationCurve frontDrag;
+
+    public FixedAnimationCurve backDrag;
+
+    public FixedList128Bytes<Entity> engineEntities;
+
+    public FixedList128Bytes<Entity> rudderEntities;
+
+    public FixedList128Bytes<Entity> flapEntities;
+
+    public FixedList128Bytes<Entity> stabilatorEntities;
+
+    public FixedList128Bytes<Entity> airleronEntities;
 }

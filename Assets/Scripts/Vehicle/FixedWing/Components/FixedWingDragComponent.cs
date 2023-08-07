@@ -3,21 +3,20 @@ using UnityEngine;
 
 public partial struct FixedWingDragComponent : IComponentData
 {
-    public float maxForwardDrag;
-    public FixedAnimationCurve forwardDrag;
+    public float maxForwardDragCoefficient;
+    public float forwardArea;
+    public FixedAnimationCurve forwardDragCoefficientAoACurve;
 
-    public float maxBackDrag;
-    public FixedAnimationCurve backDrag;
+    public float maxBackDragCoefficient;
+    public float backArea;
+    public FixedAnimationCurve backDragCoefficientAoACurve;
 
-    public float maxTopDrag;
-    public FixedAnimationCurve topDrag;
 
-    public float maxBottomDrag;
-    public FixedAnimationCurve bottomDrag;
+    public float maxLeftSideDragCoefficient;
+    public float leftSideArea;
+    public FixedAnimationCurve leftSideDragCoefficientAoACurve;
 
-    public float maxLeftSideDrag;
-    public FixedAnimationCurve leftSideDrag;
-
-    public float maxRightSideDrag;
-    public FixedAnimationCurve rightSideDrag;
+    public float maxRightSideDragCoefficient;
+    public float rightSideArea;
+    public FixedAnimationCurve rightSideDragCoefficientAoACurve;
 }

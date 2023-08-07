@@ -16,7 +16,7 @@ public partial struct PlanePhysicsSystem : ISystem
     {
         deltaTime = ((FixedStepSimulationSystemGroup)systemState.World.GetExistingSystemManaged(typeof(FixedStepSimulationSystemGroup))).Timestep;
 
-        if (NetworkManager.Instance.NetworkType == NetworkType.None)
+       /* if (NetworkManager.Instance.NetworkType == NetworkType.None)
         {
             foreach (var (fixedWingComponent, localTransform, velocity, physicsMass) in SystemAPI.Query<RefRW<FixedWingComponent>, RefRO<LocalTransform>,
             RefRW<PhysicsVelocity>, RefRW<PhysicsMass>>().WithNone<UninitializedFixedWingComponent>())
@@ -31,7 +31,7 @@ public partial struct PlanePhysicsSystem : ISystem
             {
                 UpdateFixedWing(fixedWingComponent, localTransform, velocity, physicsMass, ref systemState);
             }
-        }
+        }*/
     }
 
     private void UpdateFixedWing(RefRW<FixedWingComponent> fixedWingComponent, RefRO<LocalTransform> localTransformComponent, 

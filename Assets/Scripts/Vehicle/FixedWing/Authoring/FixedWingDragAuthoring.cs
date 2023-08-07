@@ -1,25 +1,17 @@
 ﻿using UnityEngine;
 using Unity.Entities;
+using System;
 
 public class FixedWingDragAuthoring : MonoBehaviour
 {
-    public float maxForwardDrag;
-    public AnimationCurve forwardDrag;
+    public float forwardProjectedArea;
+    public DragCoefficientValue[] forwardDragAoACoefficients;
 
-    public float maxBackDrag;
-    public AnimationCurve backDrag;
+    public float backProjectedArea;
+    public DragCoefficientValue[] backwardDragAoACoefficients;
 
-    public float maxTopDrag;
-    public AnimationCurve topDrag;
-
-    public float maxBottomDrag;
-    public AnimationCurve bottomDrag;
-
-    public float maxLeftSideDrag;
-    public AnimationCurve leftSideDrag;
-
-    public float maxRightSideDrag;
-    public AnimationCurve rightSideDrag;
+    public float sideProjectedArea;
+    public DragCoefficientValue[] sideDragAoACoefficients;
 
     class Baking : Baker<FixedWingDragAuthoring>
     {
@@ -29,31 +21,48 @@ public class FixedWingDragAuthoring : MonoBehaviour
 
             FixedWingDragComponent fixedWingDragComponent = new FixedWingDragComponent();
 
-            fixedWingDragComponent.maxForwardDrag = authoring.maxForwardDrag;
-            fixedWingDragComponent.forwardDrag = new FixedAnimationCurve();
-            fixedWingDragComponent.forwardDrag.Update(authoring.forwardDrag);
+            fixedWingDragComponent.forwardArea = authoring.forwardProjectedArea;
+            fixedWingDragComponent.maxForwardDragCoefficient = authoring.forwardDragAoACoefficients[^1].dragCoefficient;
+            fixedWingDragComponent.forwardDragCoefficientAoACurve = new FixedAnimationCurve();
+            fixedWingDragComponent.forwardDragCoefficientAoACurve.Update(CreateCurveFromDragCoefficients(authoring.forwardDragAoACoefficients));
 
-            fixedWingDragComponent.maxBackDrag = authoring.maxBackDrag;
-            fixedWingDragComponent.backDrag = new FixedAnimationCurve();
-            fixedWingDragComponent.backDrag.Update(authoring.backDrag);
+            fixedWingDragComponent.backArea = authoring.backProjectedArea;
+            fixedWingDragComponent.maxBackDragCoefficient = authoring.backwardDragAoACoefficients[^1].dragCoefficient;
+            fixedWingDragComponent.backDragCoefficientAoACurve = new FixedAnimationCurve();
+            fixedWingDragComponent.backDragCoefficientAoACurve.Update(CreateCurveFromDragCoefficients(authoring.backwardDragAoACoefficients));
 
-            fixedWingDragComponent.maxTopDrag = authoring.maxTopDrag;
-            fixedWingDragComponent.topDrag = new FixedAnimationCurve();
-            fixedWingDragComponent.topDrag.Update(authoring.topDrag);
+            fixedWingDragComponent.rightSideArea = authoring.sideProjectedArea;
+            fixedWingDragComponent.maxRightSideDragCoefficient = authoring.sideDragAoACoefficients[^1].dragCoefficient;
+            fixedWingDragComponent.rightSideDragCoefficientAoACurve = new FixedAnimationCurve();
+            fixedWingDragComponent.rightSideDragCoefficientAoACurve.Update(CreateCurveFromDragCoefficients(authoring.sideDragAoACoefficients));
 
-            fixedWingDragComponent.maxBottomDrag = authoring.maxBottomDrag;
-            fixedWingDragComponent.bottomDrag = new FixedAnimationCurve();
-            fixedWingDragComponent.bottomDrag.Update(authoring.bottomDrag);
-
-            fixedWingDragComponent.maxRightSideDrag = authoring.maxRightSideDrag;
-            fixedWingDragComponent.rightSideDrag = new FixedAnimationCurve();
-            fixedWingDragComponent.rightSideDrag.Update(authoring.rightSideDrag);
-
-            fixedWingDragComponent.maxLeftSideDrag = authoring.maxLeftSideDrag;
-            fixedWingDragComponent.leftSideDrag = new FixedAnimationCurve();
-            fixedWingDragComponent.leftSideDrag.Update(authoring.leftSideDrag);
+            fixedWingDragComponent.leftSideArea = authoring.sideProjectedArea;
+            fixedWingDragComponent.maxLeftSideDragCoefficient = authoring.sideDragAoACoefficients[^1].dragCoefficient;
+            fixedWingDragComponent.leftSideDragCoefficientAoACurve = new FixedAnimationCurve();
+            fixedWingDragComponent.leftSideDragCoefficientAoACurve.Update(CreateCurveFromDragCoefficients(authoring.sideDragAoACoefficients));
 
             AddComponent(entity, fixedWingDragComponent);
         }
+
+        private AnimationCurve CreateCurveFromDragCoefficients(DragCoefficientValue[] dragCoefficientInserts)
+        {
+            AnimationCurve animationCurve = new AnimationCurve();
+
+            DragCoefficientValue maxDragCoefficient = dragCoefficientInserts[^1];
+
+            foreach (DragCoefficientValue dragCoefficientValue in dragCoefficientInserts)
+            {
+                animationCurve.AddKey(dragCoefficientValue.angleOfAttack / maxDragCoefficient.angleOfAttack, dragCoefficientValue.dragCoefficient / maxDragCoefficient.dragCoefficient);
+            }
+
+            return animationCurve;
+        }
     }
+}
+
+[Serializable]
+public class DragCoefficientValue
+{
+    public float angleOfAttack;
+    public float dragCoefficient;
 }

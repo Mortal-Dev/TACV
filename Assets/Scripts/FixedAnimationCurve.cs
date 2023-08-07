@@ -6,6 +6,8 @@ using System.Runtime.CompilerServices;
 
 public struct FixedAnimationCurve
 {
+	public int resolution { get; private set; }
+
 	private FixedList512Bytes<float> values;
 	private WrapMode preWrapMode;
 	private WrapMode postWrapMode;
@@ -19,6 +21,8 @@ public struct FixedAnimationCurve
 
 		preWrapMode = curve.preWrapMode;
 		postWrapMode = curve.postWrapMode;
+
+		this.resolution = resolution;
 
 		for (int i = 0; i < resolution; i++)
 			values.Add(curve.Evaluate((float)i / (float)resolution));

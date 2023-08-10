@@ -5,18 +5,18 @@ public partial struct FixedWingDragComponent : IComponentData
 {
     public float maxForwardDragCoefficient;
     public float forwardArea;
-    public FixedAnimationCurve forwardDragCoefficientAoACurve;
+    public LowFidelityFixedAnimationCurve forwardDragCoefficientAoACurve;
 
     public float maxBackDragCoefficient;
     public float backArea;
-    public FixedAnimationCurve backDragCoefficientAoACurve;
+    public LowFidelityFixedAnimationCurve backDragCoefficientAoACurve;
 
 
     public float maxLeftSideDragCoefficient;
     public float leftSideArea;
-    public FixedAnimationCurve leftSideDragCoefficientAoACurve;
+    public LowFidelityFixedAnimationCurve leftSideDragCoefficientAoACurve;
 
     public float maxRightSideDragCoefficient;
     public float rightSideArea;
-    public FixedAnimationCurve rightSideDragCoefficientAoACurve;
+    public LowFidelityFixedAnimationCurve rightSideDragCoefficientAoACurve;
 }

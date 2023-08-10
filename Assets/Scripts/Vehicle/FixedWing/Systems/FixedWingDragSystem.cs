@@ -79,7 +79,7 @@ public partial struct FixedWingDragSystem : ISystem
 
     }
 
-    private float CalculateDrag(float velocity, float dot, float altitudeMeters, float area, FixedAnimationCurve dragCurve)
+    private float CalculateDrag(float velocity, float dot, float altitudeMeters, float area, LowFidelityFixedAnimationCurve dragCurve)
     {
         float airDensity = AirDensity.GetAirDensityFromMeters(altitudeMeters);
 

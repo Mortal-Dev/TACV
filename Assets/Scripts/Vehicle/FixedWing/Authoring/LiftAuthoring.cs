@@ -17,24 +17,31 @@ public partial class LiftAuthoring : MonoBehaviour
         {
             FixedWingLiftComponent fixedWingLiftComponent = new FixedWingLiftComponent();
 
+            float smallestLiftCoefficient = FindSmallestLiftCoefficient(authoring.liftCoefficientAoAValues);
             float largestLiftCoefficient = FindLargestLiftCoefficient(authoring.liftCoefficientAoAValues);
+
+            float totalLiftCoefficient = largestLiftCoefficient - smallestLiftCoefficient;
 
             fixedWingLiftComponent.zeroAoALift = authoring.zeroAoALift;
             fixedWingLiftComponent.topArea = authoring.fixedWingTopArea;
             fixedWingLiftComponent.maxCoefficientLift = largestLiftCoefficient;
+            fixedWingLiftComponent.minCoefficientLift = smallestLiftCoefficient;
             fixedWingLiftComponent.liftCurve = new FixedAnimationCurve();
-            fixedWingLiftComponent.liftCurve.Update(CreateCurveFromLiftCoefficients(authoring.liftCoefficientAoAValues, largestLiftCoefficient));
+
+            fixedWingLiftComponent.liftCurve.Update(CreateCurveFromLiftCoefficients(authoring.liftCoefficientAoAValues, smallestLiftCoefficient, totalLiftCoefficient));
+
+            Debug.Log("evaluate: " + fixedWingLiftComponent.liftCurve.Evaluate(0.5f));
 
             AddComponent(GetEntity(TransformUsageFlags.Dynamic), fixedWingLiftComponent);
         }
 
-        private AnimationCurve CreateCurveFromLiftCoefficients(List<LiftCoefficientValue> liftCoefficients, float largestLiftCoefficient)
+        private AnimationCurve CreateCurveFromLiftCoefficients(List<LiftCoefficientValue> liftCoefficients, float smallestLiftCoefficient, float totalLiftCoefficient)
         {
             AnimationCurve animationCurve = new AnimationCurve();
 
             foreach (LiftCoefficientValue liftCoefficientValue in liftCoefficients)
             {
-                animationCurve.AddKey((liftCoefficientValue.angleOfAttack + 90f) / 180f, Mathf.Abs(liftCoefficientValue.liftCoefficient) / largestLiftCoefficient);
+                animationCurve.AddKey((liftCoefficientValue.angleOfAttack + 90f) / 180f, (liftCoefficientValue.liftCoefficient - smallestLiftCoefficient) / totalLiftCoefficient);
             }
 
             return animationCurve;
@@ -54,6 +61,20 @@ public partial class LiftAuthoring : MonoBehaviour
             }
 
             return largestLiftCoefficient;
+        }
+
+        private float FindSmallestLiftCoefficient(List<LiftCoefficientValue> liftCoefficients)
+        {
+            float smallest = float.MaxValue;
+
+            foreach (LiftCoefficientValue liftCoefficientValue in liftCoefficients)
+            {
+                if (liftCoefficientValue.liftCoefficient > smallest) return smallest;
+
+                smallest = liftCoefficientValue.liftCoefficient;
+            }
+
+            return 0;
         }
     }
 }

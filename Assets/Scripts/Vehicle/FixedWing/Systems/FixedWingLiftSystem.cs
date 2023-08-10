@@ -44,20 +44,16 @@ public partial struct FixedWingLiftSystem : ISystem
 
         Debug.Log("angle of attack percent: " + angleOfAttackPercent);
 
-        Debug.Log("curve evaluate test: " + fixedWingLiftComponent.ValueRO.liftCurve.Evaluate(0));
-
-        float liftCoefficientPercent = fixedWingLiftComponent.ValueRO.liftCurve.Evaluate(angleOfAttackPercent) == 0 ? 0.02f : fixedWingLiftComponent.ValueRO.liftCurve.Evaluate(angleOfAttackPercent);
+        float liftCoefficientPercent = fixedWingLiftComponent.ValueRO.liftCurve.Evaluate(angleOfAttackPercent);
 
         Debug.Log("lift coefficient percent: " + liftCoefficientPercent);
 
-        float liftCoefficient = liftCoefficientPercent / fixedWingLiftComponent.ValueRO.maxCoefficientLift;
+        float liftCoefficient = (fixedWingLiftComponent.ValueRO.maxCoefficientLift - fixedWingLiftComponent.ValueRO.minCoefficientLift) * liftCoefficientPercent + fixedWingLiftComponent.ValueRO.minCoefficientLift;
 
         Debug.Log("lift coefficient: " + liftCoefficient);
 
         float liftPower = liftCoefficient * (AirDensity.GetAirDensityFromMeters(localTransform.ValueRO.Position.y) * 0.5f)
             * ((Vector3)physicsVelocity.ValueRO.Linear).magnitude * ((Vector3)physicsVelocity.ValueRO.Linear).magnitude * fixedWingLiftComponent.ValueRO.topArea;
-
-        if (fixedWingComponent.ValueRO.angleOfAttack < 0) liftPower *= -1;
 
         Debug.Log("lift generatred: " + liftPower);
         Debug.Log("altitude ft: " + localTransform.ValueRO.Position.y * 3.28084f);
@@ -68,6 +64,6 @@ public partial struct FixedWingLiftSystem : ISystem
 
     public float GetAoAPercent(float angleOfAttack)
     {
-        return math.abs(angleOfAttack) / 90f;
+        return (angleOfAttack + 90f) / 180f;
     }
 }

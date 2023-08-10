@@ -1,0 +1,78 @@
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
+using Unity.Physics;
+using Unity.Physics.Extensions;
+using UnityEngine;
+
+[UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
+public partial struct FixedWingStateSystem : ISystem
+{
+    private float deltaTime;
+
+    private Quaternion inverseRotation;
+
+    public void OnUpdate(ref SystemState systemState)
+    {
+        deltaTime = ((FixedStepSimulationSystemGroup)systemState.World.GetExistingSystemManaged(typeof(FixedStepSimulationSystemGroup))).Timestep;
+
+       /* if (NetworkManager.Instance.NetworkType == NetworkType.None)
+        {
+            foreach (var (fixedWingComponent, localTransform, velocity, physicsMass) in SystemAPI.Query<RefRW<FixedWingComponent>, RefRO<LocalTransform>,
+            RefRW<PhysicsVelocity>, RefRW<PhysicsMass>>().WithNone<UninitializedFixedWingComponent>())
+            {
+                UpdateFixedWing(fixedWingComponent, localTransform, velocity, physicsMass, ref systemState);
+            }
+        }
+        else
+        {
+            foreach (var (fixedWingComponent, localTransform, velocity, physicsMass) in SystemAPI.Query<RefRW<FixedWingComponent>, RefRO<LocalTransform>,
+            RefRW<PhysicsVelocity>, RefRW<PhysicsMass>>().WithNone<UninitializedFixedWingComponent>().WithAll<LocalOwnedNetworkedEntityComponent>())
+            {
+                UpdateFixedWing(fixedWingComponent, localTransform, velocity, physicsMass, ref systemState);
+            }
+        }*/
+    }
+
+    private void UpdateFixedWing(RefRW<FixedWingComponent> fixedWingComponent, RefRO<LocalTransform> localTransformComponent, 
+        RefRW<PhysicsVelocity> physicsVelocityComponent, RefRW<PhysicsMass> physicsMassComponent, ref SystemState systemState)
+    {
+        inverseRotation = Quaternion.Inverse(localTransformComponent.ValueRO.Rotation);
+
+        SetGForce(fixedWingComponent, physicsVelocityComponent);
+
+        CalculatePhysics(localTransformComponent, physicsVelocityComponent, fixedWingComponent);
+    }
+
+    private void CalculatePhysics(RefRO<LocalTransform> localTransform, RefRW<PhysicsVelocity> physicsVelocity, RefRW<FixedWingComponent> fixedWingComponent)
+    {
+        var invRotation = Quaternion.Inverse(localTransform.ValueRO.Rotation);
+
+        fixedWingComponent.ValueRW.localVelocity = invRotation * physicsVelocity.ValueRO.Linear;  //transform world velocity into local space
+        fixedWingComponent.ValueRW.localAngularVelocity = invRotation * physicsVelocity.ValueRO.Angular;  //transform into local space
+            
+        SetAngleOfAttack(fixedWingComponent);
+    }
+
+    private void SetAngleOfAttack(RefRW<FixedWingComponent> fixedWingComponent)
+    {
+        if (((Vector3)fixedWingComponent.ValueRO.localVelocity).sqrMagnitude < 0.1f)
+        {
+            fixedWingComponent.ValueRW.angleOfAttack = 0;
+            fixedWingComponent.ValueRW.angleOfAttackYaw = 0;
+            return;
+        }
+
+        fixedWingComponent.ValueRW.angleOfAttack = math.atan2(-fixedWingComponent.ValueRO.localVelocity.y, fixedWingComponent.ValueRO.localVelocity.z);
+        fixedWingComponent.ValueRW.angleOfAttackYaw = math.atan2(fixedWingComponent.ValueRO.localVelocity.x, fixedWingComponent.ValueRO.localVelocity.z);
+    }
+    
+    private void SetGForce(RefRW<FixedWingComponent> fixedWingComponent, RefRW<PhysicsVelocity> physicsVelocity)
+    {
+        float3 acceleration = (physicsVelocity.ValueRO.Linear - fixedWingComponent.ValueRO.lastVelocity) / deltaTime;
+
+        fixedWingComponent.ValueRW.lastVelocity = physicsVelocity.ValueRO.Linear;
+
+        fixedWingComponent.ValueRW.gForce = inverseRotation * acceleration;
+    }
+}

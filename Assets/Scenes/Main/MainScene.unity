@@ -543,11 +543,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: F-18F_B_W_3_auto_SS
       objectReference: {fileID: 0}
-    - target: {fileID: 5080841764657555295, guid: 3acb219998f24c641924f30a98918978,
-        type: 3}
-      propertyPath: m_Material.m_Friction.m_Value.Value
-      value: 0
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

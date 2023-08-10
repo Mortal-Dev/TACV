@@ -763,6 +763,7 @@ GameObject:
   - component: {fileID: 188708282035242644}
   - component: {fileID: 325945904389369469}
   - component: {fileID: 759486478912663009}
+  - component: {fileID: 2289316836515783675}
   m_Layer: 0
   m_Name: Cube.001
   m_TagString: Untagged
@@ -835,6 +836,22 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &2289316836515783675
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2049168463234807767}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0916cafcef721f046bb46fb98420702e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  positionId: 0
+  area: 32.16667
+  maxRudderAngleDegrees: 45
+  maxRudderDrag: 45
 --- !u!1 &2126991794268528854
 GameObject:
   m_ObjectHideFlags: 0
@@ -877,6 +894,7 @@ GameObject:
   - component: {fileID: 3560473677601255537}
   - component: {fileID: 7263502264286273318}
   - component: {fileID: 2153144884740675764}
+  - component: {fileID: 8717163149624664104}
   m_Layer: 0
   m_Name: Cube.002
   m_TagString: Untagged
@@ -949,6 +967,22 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &8717163149624664104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2173676188121723493}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cc067c7341b5314689a0b5a0bc9553a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  positionId: 0
+  area: 96.5
+  maxPositivePitchAuthorityDegrees: 30
+  maxNegativePitchAuthorityDegrees: 30
 --- !u!1 &2187557065046745635
 GameObject:
   m_ObjectHideFlags: 0
@@ -1375,6 +1409,7 @@ GameObject:
   - component: {fileID: 8529786428312797769}
   - component: {fileID: 807983897625686932}
   - component: {fileID: 1273823359260422613}
+  - component: {fileID: 3838124623780974447}
   m_Layer: 0
   m_Name: Cube.009
   m_TagString: Untagged
@@ -1447,6 +1482,22 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &3838124623780974447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3156579796454570064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ba7cda9ad7d6fc44ad23677d8643e31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  positionId: 0
+  maxPositivePitchAuthorityDegrees: 45
+  maxNegativePitchAuthorityDegrees: 45
+  area: 20
 --- !u!1 &3405814167837779763
 GameObject:
   m_ObjectHideFlags: 0
@@ -2543,8 +2594,9 @@ GameObject:
   - component: {fileID: 1384853565020992188}
   - component: {fileID: 8183786164699145007}
   - component: {fileID: 5080841764657555295}
-  - component: {fileID: 7375690793736931859}
   - component: {fileID: 4054618342487889659}
+  - component: {fileID: 7375690793736931859}
+  - component: {fileID: 8606548056771566246}
   m_Layer: 0
   m_Name: F-18F_B_W_3_auto_SS
   m_TagString: Untagged
@@ -2570,6 +2622,8 @@ Transform:
   - {fileID: 2307297617123401449}
   - {fileID: 5637143033950535673}
   - {fileID: 9004696345115228464}
+  - {fileID: 3380945886210147652}
+  - {fileID: 2244578528202019285}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2779,6 +2833,20 @@ MonoBehaviour:
         Tag07: 0
     m_SerializedVersion: 1
   m_SerializedVersion: 1
+--- !u!114 &4054618342487889659
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4994294940979563189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87f940573a7b381439cc590116760075, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  aircraftName: F/A-18F
+  aircraftBerevityCode: SuperHornet
 --- !u!114 &7375690793736931859
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2793,55 +2861,97 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   forwardProjectedArea: 97.29216
   forwardDragAoACoefficients:
+  - angleOfAttack: -90
+    dragCoefficient: 2.45
+  - angleOfAttack: -83
+    dragCoefficient: 2.4
+  - angleOfAttack: -73
+    dragCoefficient: 2.35
+  - angleOfAttack: -63
+    dragCoefficient: 2.3
+  - angleOfAttack: -53
+    dragCoefficient: 2.25
+  - angleOfAttack: -43
+    dragCoefficient: 1.8
+  - angleOfAttack: -33
+    dragCoefficient: 1.35
+  - angleOfAttack: -23
+    dragCoefficient: 0.825
+  - angleOfAttack: -13
+    dragCoefficient: 0.35
+  - angleOfAttack: -3
+    dragCoefficient: 0.15
   - angleOfAttack: 0
-    dragCoefficient: 0.02
-  - angleOfAttack: 10
     dragCoefficient: 0.05
+  - angleOfAttack: 10
+    dragCoefficient: 0.15
   - angleOfAttack: 20
-    dragCoefficient: 0.2
+    dragCoefficient: 0.35
   - angleOfAttack: 30
-    dragCoefficient: 0.45
-  - angleOfAttack: 35
-    dragCoefficient: 0.6
+    dragCoefficient: 0.825
   - angleOfAttack: 40
-    dragCoefficient: 0.7
-  - angleOfAttack: 45
-    dragCoefficient: 0.85
+    dragCoefficient: 1.35
   - angleOfAttack: 50
-    dragCoefficient: 0.98
+    dragCoefficient: 1.8
   - angleOfAttack: 60
-    dragCoefficient: 1.18
+    dragCoefficient: 2.25
+  - angleOfAttack: 70
+    dragCoefficient: 2.3
+  - angleOfAttack: 80
+    dragCoefficient: 2.35
   - angleOfAttack: 90
-    dragCoefficient: 1.28
-  backProjectedArea: 97.29216
+    dragCoefficient: 2.4
+  backProjectedArea: 100
   backwardDragAoACoefficients:
+  - angleOfAttack: -90
+    dragCoefficient: 2.45
+  - angleOfAttack: -83
+    dragCoefficient: 2.4
+  - angleOfAttack: -73
+    dragCoefficient: 2.35
+  - angleOfAttack: -63
+    dragCoefficient: 2.3
+  - angleOfAttack: -53
+    dragCoefficient: 2.25
+  - angleOfAttack: -43
+    dragCoefficient: 1.8
+  - angleOfAttack: -33
+    dragCoefficient: 1.35
+  - angleOfAttack: -23
+    dragCoefficient: 0.825
+  - angleOfAttack: -13
+    dragCoefficient: 0.35
+  - angleOfAttack: -3
+    dragCoefficient: 0.15
   - angleOfAttack: 0
-    dragCoefficient: 0.02
-  - angleOfAttack: 10
     dragCoefficient: 0.05
+  - angleOfAttack: 10
+    dragCoefficient: 0.15
   - angleOfAttack: 20
-    dragCoefficient: 0.2
+    dragCoefficient: 0.35
   - angleOfAttack: 30
-    dragCoefficient: 0.45
-  - angleOfAttack: 35
-    dragCoefficient: 0.6
+    dragCoefficient: 0.825
   - angleOfAttack: 40
-    dragCoefficient: 0.7
-  - angleOfAttack: 45
-    dragCoefficient: 0.85
+    dragCoefficient: 1.35
   - angleOfAttack: 50
-    dragCoefficient: 0.98
+    dragCoefficient: 1.8
   - angleOfAttack: 60
-    dragCoefficient: 1.18
+    dragCoefficient: 2.25
+  - angleOfAttack: 70
+    dragCoefficient: 2.3
+  - angleOfAttack: 80
+    dragCoefficient: 2.35
   - angleOfAttack: 90
-    dragCoefficient: 1.28
+    dragCoefficient: 2.4
   sideProjectedArea: 486.4608
   sideDragAoACoefficients:
+  - angleOfAttack: -90
+    dragCoefficient: 2.45
   - angleOfAttack: 0
     dragCoefficient: 0.295
-  - angleOfAttack: 10
-    dragCoefficient: 0.295
---- !u!114 &4054618342487889659
+  - angleOfAttack: 90
+    dragCoefficient: 2.4
+--- !u!114 &8606548056771566246
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2850,17 +2960,49 @@ MonoBehaviour:
   m_GameObject: {fileID: 4994294940979563189}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 87f940573a7b381439cc590116760075, type: 3}
+  m_Script: {fileID: 11500000, guid: d7a86a4bd17f87e4192724488831e629, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  aircraftName: F-18F
-  aircraftBerevityCode: S
-  liftCurve:
-    serializedVersion: 2
-    m_Curve: []
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
+  fixedWingTopArea: 486.4608
+  liftCoefficientAoAValues:
+  - angleOfAttack: -90
+    liftCoefficient: 0
+  - angleOfAttack: -73
+    liftCoefficient: -0.15
+  - angleOfAttack: -63
+    liftCoefficient: -0.6
+  - angleOfAttack: -53
+    liftCoefficient: -1.1
+  - angleOfAttack: -43
+    liftCoefficient: -1.75
+  - angleOfAttack: -33
+    liftCoefficient: -1.9
+  - angleOfAttack: -23
+    liftCoefficient: -1.7
+  - angleOfAttack: -13
+    liftCoefficient: -1.2
+  - angleOfAttack: -3
+    liftCoefficient: -0.5
+  - angleOfAttack: 0
+    liftCoefficient: 0.02
+  - angleOfAttack: 10
+    liftCoefficient: 0.5
+  - angleOfAttack: 20
+    liftCoefficient: 1.2
+  - angleOfAttack: 30
+    liftCoefficient: 1.7
+  - angleOfAttack: 40
+    liftCoefficient: 1.9
+  - angleOfAttack: 50
+    liftCoefficient: 1.75
+  - angleOfAttack: 60
+    liftCoefficient: 1.1
+  - angleOfAttack: 70
+    liftCoefficient: 0.6
+  - angleOfAttack: 80
+    liftCoefficient: 0.15
+  - angleOfAttack: 90
+    liftCoefficient: 0
 --- !u!1 &5042091126842104434
 GameObject:
   m_ObjectHideFlags: 0
@@ -2955,6 +3097,7 @@ GameObject:
   - component: {fileID: 1351485513570004528}
   - component: {fileID: 2502587174639968408}
   - component: {fileID: 6648636553124731362}
+  - component: {fileID: 4319151634088606383}
   m_Layer: 0
   m_Name: Cube.010
   m_TagString: Untagged
@@ -3027,6 +3170,22 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &4319151634088606383
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5057137002801323523}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ba7cda9ad7d6fc44ad23677d8643e31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  positionId: 1
+  maxPositivePitchAuthorityDegrees: 45
+  maxNegativePitchAuthorityDegrees: 45
+  area: 20
 --- !u!1 &5825120823332224462
 GameObject:
   m_ObjectHideFlags: 0
@@ -4786,6 +4945,7 @@ GameObject:
   - component: {fileID: 4941040718100307510}
   - component: {fileID: 227508622432200052}
   - component: {fileID: 7610860404779645152}
+  - component: {fileID: 4404684007566513456}
   m_Layer: 0
   m_Name: Cube.014
   m_TagString: Untagged
@@ -4858,6 +5018,22 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &4404684007566513456
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8306797911342914078}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0916cafcef721f046bb46fb98420702e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  positionId: 1
+  area: 32.16667
+  maxRudderAngleDegrees: 45
+  maxRudderDrag: 45
 --- !u!1 &8315691208422925514
 GameObject:
   m_ObjectHideFlags: 0
@@ -4945,6 +5121,53 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &8390799383632893635
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3380945886210147652}
+  - component: {fileID: 4266717909085112991}
+  m_Layer: 0
+  m_Name: LeftEngine
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3380945886210147652
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8390799383632893635}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.29, y: 0.063, z: -3.21}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 509404930941555515}
+  m_RootOrder: -1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4266717909085112991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8390799383632893635}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eaa9a0d7d9229b4ba1bf5d8960221aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  positionId: 0
+  maxMilitaryPowerNewtons: 58000
+  maxAfterBurnerNewtons: 98000
 --- !u!1 &8428750714664096427
 GameObject:
   m_ObjectHideFlags: 0
@@ -5162,6 +5385,7 @@ GameObject:
   - component: {fileID: 394759610655735981}
   - component: {fileID: 6683098913963318365}
   - component: {fileID: 7141632761725700236}
+  - component: {fileID: 5544769513638478297}
   m_Layer: 0
   m_Name: Cube.011
   m_TagString: Untagged
@@ -5234,6 +5458,22 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &5544769513638478297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8524420629637863546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cc067c7341b5314689a0b5a0bc9553a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  positionId: 1
+  area: 96.5
+  maxPositivePitchAuthorityDegrees: 30
+  maxNegativePitchAuthorityDegrees: 30
 --- !u!1 &8630681047328976136
 GameObject:
   m_ObjectHideFlags: 0
@@ -5483,6 +5723,53 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &8804389374602306797
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2244578528202019285}
+  - component: {fileID: 8965261058830477517}
+  m_Layer: 0
+  m_Name: RightEngine
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2244578528202019285
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8804389374602306797}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.291, y: 0.065, z: -3.21}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 509404930941555515}
+  m_RootOrder: -1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8965261058830477517
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8804389374602306797}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eaa9a0d7d9229b4ba1bf5d8960221aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  positionId: 1
+  maxMilitaryPowerNewtons: 58000
+  maxAfterBurnerNewtons: 98000
 --- !u!1 &8875691221518594852
 GameObject:
   m_ObjectHideFlags: 0

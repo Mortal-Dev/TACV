@@ -35,7 +35,7 @@ public struct FixedAnimationCurve
 		if (count == 1)
 			return values[0];
 
-		if (t < 0f)
+		if (t <= 0f)
 		{
 			switch (preWrapMode)
 			{

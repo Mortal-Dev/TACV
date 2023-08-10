@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class AirBrakeAuthoring : MonoBehaviour
 {
+    public int positionId;
+
     public float maxDrag;
 
     public float timeToDeploy;
@@ -13,7 +15,7 @@ public class AirBrakeAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
 
-            AddComponent(entity, new AirBrakeComponent() { maxDrag = authoring.maxDrag, timeToDeploy = authoring.timeToDeploy });
+            AddComponent(entity, new AirBrakeComponent() { Id = authoring.positionId, maxDrag = authoring.maxDrag, timeToDeploy = authoring.timeToDeploy });
         }
     }
 }

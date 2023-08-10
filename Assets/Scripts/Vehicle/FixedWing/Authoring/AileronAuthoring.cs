@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class AileronAuthoring : MonoBehaviour
 {
+    public int positionId;
+
     public float maxPositivePitchAuthorityDegrees;
 
     public float maxNegativePitchAuthorityDegrees;
@@ -15,7 +17,7 @@ public class AileronAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
 
-            AddComponent(entity, new StabilatorComponent() { maxPositivePitchAuthorityDegrees = authoring.maxPositivePitchAuthorityDegrees, 
+            AddComponent(entity, new StabilatorComponent() { Id = authoring.positionId, maxPositivePitchAuthorityDegrees = authoring.maxPositivePitchAuthorityDegrees, 
                 maxNegativePitchAuthorityDegrees = authoring.maxNegativePitchAuthorityDegrees, area = authoring.area });
         }
     }

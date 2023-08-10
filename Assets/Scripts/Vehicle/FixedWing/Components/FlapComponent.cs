@@ -1,7 +1,9 @@
 using Unity.Entities;
 
-public partial struct FlapComponent : IComponentData
+public partial struct FlapComponent : IComponentData, ComponentId
 {
+    public int Id { get; set; }
+
     public float currentFlapDegree;
 
     public float currentDrag;

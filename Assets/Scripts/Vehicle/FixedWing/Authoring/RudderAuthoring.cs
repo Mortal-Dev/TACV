@@ -5,6 +5,10 @@ using Unity.Entities;
 
 public class RudderAuthoring : MonoBehaviour
 {
+    public int positionId;
+
+    public float area;
+
     public float maxRudderAngleDegrees;
 
     public float maxRudderDrag;
@@ -15,7 +19,7 @@ public class RudderAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
 
-            AddComponent(entity, new RudderComponent() { maxRudderAngleDegrees = authoring.maxRudderAngleDegrees, maxRudderDrag = authoring.maxRudderDrag });
+            AddComponent(entity, new RudderComponent() { Id = authoring.positionId, area = authoring.area, maxRudderAngleDegrees = authoring.maxRudderAngleDegrees });
         }
     }
 }

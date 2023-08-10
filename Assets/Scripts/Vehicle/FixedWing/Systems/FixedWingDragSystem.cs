@@ -6,7 +6,7 @@ using Unity.Transforms;
 using Unity.Mathematics;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-[UpdateAfter(typeof(PlanePhysicsSystem))]
+[UpdateAfter(typeof(FixedWingStateSystem))]
 public partial struct FixedWingDragSystem : ISystem
 {
     float deltaTime;
@@ -38,65 +38,54 @@ public partial struct FixedWingDragSystem : ISystem
     {
         Vector3 velocity = physicsVelocity.ValueRO.Linear;
 
-        float3 forward = localTransformComponent.ValueRO.Forward();
-        float3 backward = -forward;
-        float3 rightSide = localTransformComponent.ValueRO.Right();
-        float3 leftSide = -rightSide;
+        Vector3 forward = localTransformComponent.ValueRO.Forward();
+        Vector3 backward = -forward;
+        Vector3 rightSide = localTransformComponent.ValueRO.Right();
+        Vector3 leftSide = -rightSide;
 
         float altitudeMeters = localTransformComponent.ValueRO.Position.y;
 
-        float forwardAngle = Vector3.Angle(forward, velocity);
-        float backwardAngle = Vector3.Angle(backward, velocity);
-        float rightSideAngle = Vector3.Angle(rightSide, velocity);
-        float leftSideAngle = Vector3.Angle(leftSide, velocity);
+        float forwardDot = Vector3.Dot(forward.normalized, velocity.normalized);
+        float backwardDot = Vector3.Angle(backward.normalized, velocity.normalized);
+        float rightSideDot = Vector3.Angle(rightSide.normalized, velocity.normalized);
+        float leftSideDot = Vector3.Angle(leftSide.normalized, velocity.normalized);
 
-        Vector3 oppositeVelocity = (-velocity).normalized;
+        Vector3 oppositeVelocityNormalized = (-velocity).normalized;
 
-        if (forwardAngle > 0 && forwardAngle < 90)
+        if (forwardDot > 0 && forwardDot <= 1)
         {
-            float drag = CalculateDrag(velocity, forward, altitudeMeters, fixedWingDragComponent.ValueRO.forwardArea, fixedWingDragComponent.ValueRO.forwardDragCoefficientAoACurve);
-            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, oppositeVelocity * drag * deltaTime);
+            float drag = CalculateDrag(velocity.magnitude, forwardDot, altitudeMeters, fixedWingDragComponent.ValueRO.forwardArea, fixedWingDragComponent.ValueRO.forwardDragCoefficientAoACurve);
+            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized);
+
+            Debug.Log("drag: " + drag);
         }
-        else if (backwardAngle > 0 && backwardAngle < 90)
+        else if (backwardDot > 0 && backwardDot <= 1)
         {
-            float drag = CalculateDrag(velocity, backward, altitudeMeters, fixedWingDragComponent.ValueRO.backArea, fixedWingDragComponent.ValueRO.backDragCoefficientAoACurve);
-            Debug.Log(backwardAngle);
-
-           // physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, oppositeVelocity * drag * deltaTime);
-        }
-
-        if (rightSideAngle > 0 && rightSideAngle < 89)
-        {
-            float drag = CalculateDrag(velocity, rightSide, altitudeMeters, fixedWingDragComponent.ValueRO.rightSideArea, fixedWingDragComponent.ValueRO.rightSideDragCoefficientAoACurve);
-            Debug.Log(rightSideAngle);
-
-            //physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, oppositeVelocity * drag * deltaTime);
-        }
-        else if (leftSideAngle > 0 && leftSideAngle < 89)
-        {
-            float drag = CalculateDrag(velocity, leftSide, altitudeMeters, fixedWingDragComponent.ValueRO.leftSideArea, fixedWingDragComponent.ValueRO.leftSideDragCoefficientAoACurve);
-            Debug.Log(leftSideAngle);
-            // physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, oppositeVelocity * drag * deltaTime);
+            float drag = CalculateDrag(velocity.magnitude, backwardDot, altitudeMeters, fixedWingDragComponent.ValueRO.backArea, fixedWingDragComponent.ValueRO.backDragCoefficientAoACurve);
+            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized);
         }
 
-        physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, localTransformComponent.ValueRW.Forward() * 49000 * 2 * deltaTime);
+        if (rightSideDot > 0 && rightSideDot <= 1)
+        {
+            float drag = CalculateDrag(velocity.magnitude, rightSideDot, altitudeMeters, fixedWingDragComponent.ValueRO.rightSideArea, fixedWingDragComponent.ValueRO.rightSideDragCoefficientAoACurve);
 
-        Debug.Log("speed kts: " + velocity.magnitude * 1.94);
+            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized);
+        }
+        else if (leftSideDot > 0 && leftSideDot <= 1)
+        {
+            float drag = CalculateDrag(velocity.magnitude, leftSideDot, altitudeMeters, fixedWingDragComponent.ValueRO.leftSideArea, fixedWingDragComponent.ValueRO.leftSideDragCoefficientAoACurve);
+             physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized);
+        }
+
     }
 
-    private float CalculateDrag(float3 velocity, float3 direction, float altitudeMeters, float area, FixedAnimationCurve dragCurve)
+    private float CalculateDrag(float velocity, float dot, float altitudeMeters, float area, FixedAnimationCurve dragCurve)
     {
-        float angle = Vector3.Angle(direction, velocity);
-
-        if (angle <= 0 || angle > 90) return 0f;
-
         float airDensity = AirDensity.GetAirDensityFromMeters(altitudeMeters);
 
-        float aoaPercent = angle / 90f;
+        float dragCoefficient = dragCurve.Evaluate(1 - dot);
 
-        float dragCoefficient = dragCurve.Evaluate(aoaPercent);
-
-        float drag = dragCoefficient * airDensity * (((Vector3)velocity).magnitude * ((Vector3)velocity).magnitude / 2f) * area;
+        float drag = dragCoefficient * airDensity * (velocity * velocity / 2f) * area;
 
         return drag;
     }

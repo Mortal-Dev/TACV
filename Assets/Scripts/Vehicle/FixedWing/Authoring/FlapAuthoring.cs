@@ -5,6 +5,8 @@ using Unity.Entities;
 
 public class FlapAuthoring : MonoBehaviour
 {
+    public int positionId;
+
     public float maxFlapDegree;
 
     public float maxDrag;
@@ -17,7 +19,7 @@ public class FlapAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
 
-            AddComponent(entity, new FlapComponent() { maxFlapDegree = authoring.maxFlapDegree, maxDrag = authoring.maxDrag, maxLift = authoring.maxLift });
+            AddComponent(entity, new FlapComponent() { Id = authoring.positionId, maxFlapDegree = authoring.maxFlapDegree, maxDrag = authoring.maxDrag, maxLift = authoring.maxLift });
         }
     }
 }

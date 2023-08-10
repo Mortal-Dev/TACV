@@ -20,20 +20,6 @@ public partial struct FixedWingComponent : IComponentData
 
     public float3 localAngularVelocity;
 
-    public FixedAnimationCurve aoaLiftCurve;
-
-    public FixedAnimationCurve leftSideDrag;
-
-    public FixedAnimationCurve rightSideDrag;
-
-    public FixedAnimationCurve topDrag;
-
-    public FixedAnimationCurve beneathDrag;
-
-    public FixedAnimationCurve frontDrag;
-
-    public FixedAnimationCurve backDrag;
-
     public FixedList128Bytes<Entity> engineEntities;
 
     public FixedList128Bytes<Entity> rudderEntities;

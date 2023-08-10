@@ -7,8 +7,6 @@ public class FixedWingAuthoring : MonoBehaviour
 
     public string aircraftBerevityCode;
 
-    public AnimationCurve liftCurve;
-
     class Baking : Baker<FixedWingAuthoring>
     {
         public override void Bake(FixedWingAuthoring authoring)

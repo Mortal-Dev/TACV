@@ -20,6 +20,10 @@ public partial struct FixedWingComponent : IComponentData
 
     public float3 localAngularVelocity;
 
+    public Entity centerOfPressureEntity;
+
+    public Entity centerOfGravityEntity;
+
     public FixedList128Bytes<Entity> engineEntities;
 
     public FixedList128Bytes<Entity> rudderEntities;

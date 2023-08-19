@@ -7,8 +7,6 @@ public partial class LiftAuthoring : MonoBehaviour
 {
     public float fixedWingTopArea;
 
-    public float zeroAoALift;
-
     public List<LiftCoefficientValue> liftCoefficientAoAValues;
 
     class Baking : Baker<LiftAuthoring>
@@ -22,15 +20,12 @@ public partial class LiftAuthoring : MonoBehaviour
 
             float totalLiftCoefficient = largestLiftCoefficient - smallestLiftCoefficient;
 
-            fixedWingLiftComponent.zeroAoALift = authoring.zeroAoALift;
             fixedWingLiftComponent.topArea = authoring.fixedWingTopArea;
             fixedWingLiftComponent.maxCoefficientLift = largestLiftCoefficient;
             fixedWingLiftComponent.minCoefficientLift = smallestLiftCoefficient;
-            fixedWingLiftComponent.liftCurve = new FixedAnimationCurve();
+            fixedWingLiftComponent.liftCurve = new HighFidelityFixedAnimationCurve();
 
             fixedWingLiftComponent.liftCurve.Update(CreateCurveFromLiftCoefficients(authoring.liftCoefficientAoAValues, smallestLiftCoefficient, totalLiftCoefficient));
-
-            Debug.Log("evaluate: " + fixedWingLiftComponent.liftCurve.Evaluate(0.5f));
 
             AddComponent(GetEntity(TransformUsageFlags.Dynamic), fixedWingLiftComponent);
         }

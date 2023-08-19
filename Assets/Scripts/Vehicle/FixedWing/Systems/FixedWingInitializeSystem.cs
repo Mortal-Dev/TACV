@@ -35,6 +35,21 @@ public partial class FixedWingInitializeSystem : SystemBase
         fixedWingComponent.stabilatorEntities = GetEntities<StabilatorComponent>(children);
         fixedWingComponent.airleronEntities = GetEntities<AirleronComponent>(children);
         fixedWingComponent.engineEntities = GetEntities<EngineComponent>(children);
+
+        fixedWingComponent.centerOfPressureEntity = GetEntity<CenterOfPressureComponent>(children);
+        fixedWingComponent.centerOfGravityEntity = GetEntity<CenterOfGravityComponent>(children);
+    }
+
+    private Entity GetEntity<T>(DynamicBuffer<LinkedEntityGroup> children) where T : unmanaged, IComponentData
+    {
+        foreach (LinkedEntityGroup linkedEntityGroup in children)
+        {
+            if (!EntityManager.HasComponent<T>(linkedEntityGroup.Value)) continue;
+
+            return linkedEntityGroup.Value;
+        }
+
+        return Entity.Null;
     }
 
     private FixedList128Bytes<Entity> GetEntities<T>(DynamicBuffer<LinkedEntityGroup> children) where T : unmanaged, IComponentData, ComponentId

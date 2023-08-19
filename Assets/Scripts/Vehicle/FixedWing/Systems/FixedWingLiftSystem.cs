@@ -38,32 +38,48 @@ public partial struct FixedWingLiftSystem : ISystem
     private void UpdateLift(RefRO<FixedWingComponent> fixedWingComponent, RefRW<FixedWingLiftComponent> fixedWingLiftComponent, RefRO<PhysicsMass> physicsMass, RefRO<LocalTransform> localTransform, 
         RefRW<PhysicsVelocity> physicsVelocity, ref SystemState systemState)
     {
-        float angleOfAttackPercent = GetAoAPercent(fixedWingComponent.ValueRO.angleOfAttack);
+        float angleOfAttack = fixedWingComponent.ValueRO.angleOfAttack;
 
-        Debug.Log("aoa: " + fixedWingComponent.ValueRO.angleOfAttack);
+        float angleOfAttackPercent = (angleOfAttack + 90f) / 180f;
 
-        Debug.Log("angle of attack percent: " + angleOfAttackPercent);
+        Vector3 vec3 = localTransform.ValueRO.Forward();
+
+        Debug.Log(vec3.normalized);
+
+        Debug.Log(RotateVectorByX(vec3.normalized, 90f));
+
+        Debug.Log(-localTransform.ValueRO.Up());
 
         float liftCoefficientPercent = fixedWingLiftComponent.ValueRO.liftCurve.Evaluate(angleOfAttackPercent);
 
-        Debug.Log("lift coefficient percent: " + liftCoefficientPercent);
-
         float liftCoefficient = (fixedWingLiftComponent.ValueRO.maxCoefficientLift - fixedWingLiftComponent.ValueRO.minCoefficientLift) * liftCoefficientPercent + fixedWingLiftComponent.ValueRO.minCoefficientLift;
-
-        Debug.Log("lift coefficient: " + liftCoefficient);
 
         float liftPower = liftCoefficient * (AirDensity.GetAirDensityFromMeters(localTransform.ValueRO.Position.y) * 0.5f)
             * ((Vector3)physicsVelocity.ValueRO.Linear).magnitude * ((Vector3)physicsVelocity.ValueRO.Linear).magnitude * fixedWingLiftComponent.ValueRO.topArea;
 
-        Debug.Log("lift generatred: " + liftPower);
+        float3 centerOfPressure = SystemAPI.GetComponent<LocalTransform>(fixedWingComponent.ValueRO.centerOfPressureEntity).Position;
+
+        //physicsVelocity.ValueRW.ApplyLinearImpulse(physicsMass.ValueRO, RotateVectorByX(vec3.normalized, 90f) * liftPower * SystemAPI.Time.DeltaTime);
+
+        physicsVelocity.ValueRW.ApplyImpulse(physicsMass.ValueRO, physicsMass.ValueRO.Transform.pos, physicsMass.ValueRO.Transform.rot, RotateVectorByX(vec3.normalized, 90f) * liftPower * SystemAPI.Time.DeltaTime, centerOfPressure);
+
         Debug.Log("altitude ft: " + localTransform.ValueRO.Position.y * 3.28084f);
         Debug.Log("speed kts: " + ((Vector3)physicsVelocity.ValueRO.Linear).magnitude * 1.943844f);
-
-        physicsVelocity.ValueRW.ApplyLinearImpulse(physicsMass.ValueRO, localTransform.ValueRO.Up() * liftPower * SystemAPI.Time.DeltaTime);
     }
 
-    public float GetAoAPercent(float angleOfAttack)
+    // Function to rotate a Vector3 by a specified angle around the X-axis
+    private float3 RotateVectorByX(float3 vector, float angle)
     {
-        return (angleOfAttack + 90f) / 180f;
+        float radianAngle = angle * Mathf.Deg2Rad;
+        float sinAngle = math.sin(radianAngle);
+        float cosAngle = math.cos(radianAngle);
+
+        float3 rotatedVector = new float3(
+            vector.x,
+            vector.y * cosAngle - vector.z * sinAngle,
+            vector.y * sinAngle + vector.z * cosAngle
+        );
+
+        return rotatedVector;
     }
 }

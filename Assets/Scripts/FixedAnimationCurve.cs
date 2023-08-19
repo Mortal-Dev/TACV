@@ -4,9 +4,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 using System.Runtime.CompilerServices;
 
-
-
-public struct FixedAnimationCurve
+public struct HighFidelityFixedAnimationCurve
 {
 	public int Resolution { get; private set; }
 
@@ -19,7 +17,7 @@ public struct FixedAnimationCurve
 		if (curve == null)
 			throw new NullReferenceException("Animation curve is null.");
 
-		values = new FixedList128Bytes<float>();
+		values = new FixedList4096Bytes<float>();
 
 		preWrapMode = curve.preWrapMode;
 		postWrapMode = curve.postWrapMode;
@@ -103,7 +101,7 @@ public struct LowFidelityFixedAnimationCurve
 		if (curve == null)
 			throw new NullReferenceException("Animation curve is null.");
 
-		values = new FixedList128Bytes<float>();
+		values = new FixedList512Bytes<float>();
 
 		preWrapMode = curve.preWrapMode;
 		postWrapMode = curve.postWrapMode;

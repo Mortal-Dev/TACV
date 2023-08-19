@@ -46,9 +46,9 @@ public partial struct FixedWingDragSystem : ISystem
         float altitudeMeters = localTransformComponent.ValueRO.Position.y;
 
         float forwardDot = Vector3.Dot(forward.normalized, velocity.normalized);
-        float backwardDot = Vector3.Angle(backward.normalized, velocity.normalized);
-        float rightSideDot = Vector3.Angle(rightSide.normalized, velocity.normalized);
-        float leftSideDot = Vector3.Angle(leftSide.normalized, velocity.normalized);
+        float backwardDot = Vector3.Dot(backward.normalized, velocity.normalized);
+        float rightSideDot = Vector3.Dot(rightSide.normalized, velocity.normalized);
+        float leftSideDot = Vector3.Dot(leftSide.normalized, velocity.normalized);
 
         Vector3 oppositeVelocityNormalized = (-velocity).normalized;
 
@@ -68,13 +68,12 @@ public partial struct FixedWingDragSystem : ISystem
         if (rightSideDot > 0 && rightSideDot <= 1)
         {
             float drag = CalculateDrag(velocity.magnitude, rightSideDot, altitudeMeters, fixedWingDragComponent.ValueRO.rightSideArea, fixedWingDragComponent.ValueRO.rightSideDragCoefficientAoACurve);
-
             physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized);
         }
         else if (leftSideDot > 0 && leftSideDot <= 1)
         {
             float drag = CalculateDrag(velocity.magnitude, leftSideDot, altitudeMeters, fixedWingDragComponent.ValueRO.leftSideArea, fixedWingDragComponent.ValueRO.leftSideDragCoefficientAoACurve);
-             physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized);
+            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized);
         }
 
     }

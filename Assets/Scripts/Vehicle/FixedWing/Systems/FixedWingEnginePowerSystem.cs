@@ -34,7 +34,7 @@ public partial struct FixedWingEnginePowerSystem : ISystem
 
             physicsVelocity.ValueRW.ApplyImpulse(physicsMass.ValueRO, physicsMass.ValueRO.Transform.pos, physicsMass.ValueRO.Transform.rot, ((Vector3)localTransform.ValueRO.Forward()).normalized * engineComponent.maxAfterBurnerPowerNewtons * SystemAPI.Time.DeltaTime, engineLocalTransform.Position);
 
-            //physicsVelocity.ValueRW.ApplyLinearImpulse(physicsMass.ValueRO, ((Vector3)localTransform.ValueRO.Forward()).normalized * engineComponent.maxAfterBurnerPowerNewtons * SystemAPI.Time.DeltaTime);
+            break;
         }
     }
 }

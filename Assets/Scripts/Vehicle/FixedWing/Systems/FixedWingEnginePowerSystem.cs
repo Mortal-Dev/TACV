@@ -28,10 +28,13 @@ public partial struct FixedWingEnginePowerSystem : ISystem
         {
             EngineComponent engineComponent = SystemAPI.GetComponent<EngineComponent>(engineEntity);
 
+            LocalTransform engineLocalTransform = SystemAPI.GetComponent<LocalTransform>(engineEntity);
+
             engineComponent.currentPower = engineComponent.maxAfterBurnerPowerNewtons * fixedWingComponent.ValueRO.throttle;
 
-            physicsVelocity.ValueRW.ApplyLinearImpulse(physicsMass.ValueRO, ((Vector3)localTransform.ValueRO.Forward()).normalized * engineComponent.maxAfterBurnerPowerNewtons * SystemAPI.Time.DeltaTime);
-        }
+            physicsVelocity.ValueRW.ApplyImpulse(physicsMass.ValueRO, physicsMass.ValueRO.Transform.pos, physicsMass.ValueRO.Transform.rot, ((Vector3)localTransform.ValueRO.Forward()).normalized * engineComponent.maxAfterBurnerPowerNewtons * SystemAPI.Time.DeltaTime, engineLocalTransform.Position);
 
+            //physicsVelocity.ValueRW.ApplyLinearImpulse(physicsMass.ValueRO, ((Vector3)localTransform.ValueRO.Forward()).normalized * engineComponent.maxAfterBurnerPowerNewtons * SystemAPI.Time.DeltaTime);
+        }
     }
 }

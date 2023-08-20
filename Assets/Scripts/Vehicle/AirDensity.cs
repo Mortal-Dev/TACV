@@ -37,8 +37,8 @@ public static class AirDensity
 
     public static float GetAirDensityFromMeters(float altitudeMeters)
     {
-        KeyValuePair<float, float> upperAirAltitudeDensity = new KeyValuePair<float, float>(float.NegativeInfinity, float.NegativeInfinity);
-        KeyValuePair<float, float> lowerAirAltitudeDensity = new KeyValuePair<float, float>(float.NegativeInfinity, float.NegativeInfinity);
+        KeyValuePair<float, float> upperAirAltitudeDensity = new(float.NegativeInfinity, float.NegativeInfinity);
+        KeyValuePair<float, float> lowerAirAltitudeDensity = new(float.NegativeInfinity, float.NegativeInfinity);
 
         foreach (KeyValuePair<float, float> airAltitudeDensity in altitudeDensity.Reverse())
         {

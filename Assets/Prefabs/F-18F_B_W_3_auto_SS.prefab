@@ -2757,7 +2757,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_MotionType: 0
   m_Smoothing: 1
-  m_Mass: 15363
+  m_Mass: 14552
   m_LinearDamping: 0
   m_AngularDamping: 0
   m_InitialLinearVelocity:
@@ -2847,7 +2847,7 @@ MonoBehaviour:
     m_Friction:
       m_Override: 0
       m_Value:
-        Value: 0.015
+        Value: 0
         CombineMode: 0
     m_Restitution:
       m_Override: 0
@@ -3068,7 +3068,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fixedWingTopArea: 486.4608
-  zeroAoALift: 0
   liftCoefficientAoAValues:
   - angleOfAttack: -90
     liftCoefficient: 0

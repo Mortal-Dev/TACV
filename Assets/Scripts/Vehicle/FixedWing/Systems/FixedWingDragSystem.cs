@@ -55,25 +55,23 @@ public partial struct FixedWingDragSystem : ISystem
         if (forwardDot > 0 && forwardDot <= 1)
         {
             float drag = CalculateDrag(velocity.magnitude, forwardDot, altitudeMeters, fixedWingDragComponent.ValueRO.forwardArea, fixedWingDragComponent.ValueRO.forwardDragCoefficientAoACurve);
-            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized);
-
-            Debug.Log("drag: " + drag);
+            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized * forwardDot);
         }
         else if (backwardDot > 0 && backwardDot <= 1)
         {
             float drag = CalculateDrag(velocity.magnitude, backwardDot, altitudeMeters, fixedWingDragComponent.ValueRO.backArea, fixedWingDragComponent.ValueRO.backDragCoefficientAoACurve);
-            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized);
+            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized * backwardDot);
         }
 
         if (rightSideDot > 0 && rightSideDot <= 1)
         {
             float drag = CalculateDrag(velocity.magnitude, rightSideDot, altitudeMeters, fixedWingDragComponent.ValueRO.rightSideArea, fixedWingDragComponent.ValueRO.rightSideDragCoefficientAoACurve);
-            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized);
+            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized * rightSideDot);
         }
         else if (leftSideDot > 0 && leftSideDot <= 1)
         {
             float drag = CalculateDrag(velocity.magnitude, leftSideDot, altitudeMeters, fixedWingDragComponent.ValueRO.leftSideArea, fixedWingDragComponent.ValueRO.leftSideDragCoefficientAoACurve);
-            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized);
+            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized * leftSideDot);
         }
 
     }

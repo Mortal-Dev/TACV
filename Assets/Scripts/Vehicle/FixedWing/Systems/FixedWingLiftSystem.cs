@@ -12,16 +12,35 @@ using System.Runtime.InteropServices;
 [BurstCompile]
 public partial struct FixedWingLiftSystem : ISystem
 {
+    EntityQuery networkEntityQuery;
+
+    [BurstCompile]
+    public void OnCreate(ref SystemState systemState)
+    {
+        
+    }
+
+    [BurstCompile]
     public void OnUpdate(ref SystemState systemState)
     {
+        if (NetworkManager.Instance.NetworkType == NetworkType.None)
+        {
+            new UpdateLiftJob().ScheduleParallel(systemState.Dependency).Complete();
+        }
+        else
+        {
 
+        }
     }
 
     [BurstCompile]
     [StructLayout(LayoutKind.Auto)]
     partial struct UpdateLiftJob : IJobEntity
     {
+        public void Execute()
+        {
 
+        }
     }
 
     /*[BurstCompile]

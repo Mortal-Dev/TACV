@@ -5,13 +5,26 @@ using Unity.Physics.Extensions;
 using Unity.Transforms;
 using Unity.Mathematics;
 using UnityEngine;
+using System.Runtime.InteropServices;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 [UpdateAfter(typeof(FixedWingStateSystem))]
 [BurstCompile]
 public partial struct FixedWingLiftSystem : ISystem
 {
+    public void OnUpdate(ref SystemState systemState)
+    {
+
+    }
+
     [BurstCompile]
+    [StructLayout(LayoutKind.Auto)]
+    partial struct UpdateLiftJob : IJobEntity
+    {
+
+    }
+
+    /*[BurstCompile]
     public void OnUpdate(ref SystemState systemState)
     {
         if (NetworkManager.Instance.NetworkType == NetworkType.None)
@@ -62,7 +75,7 @@ public partial struct FixedWingLiftSystem : ISystem
 
         Debug.Log("altitude ft: " + localTransform.ValueRO.Position.y * 3.28084f);
         Debug.Log("speed kts: " + ((Vector3)physicsVelocity.ValueRO.Linear).magnitude * 1.943844f);
-    }
+    }*/
 
     // Function to rotate a Vector3 by a specified angle around the X-axis
     private float3 RotateVectorByX(float3 vector, float angle)

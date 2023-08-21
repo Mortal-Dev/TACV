@@ -1,5 +1,5 @@
 ﻿using Unity.Entities;
 
-public partial struct MinCenterOfPressureComponent : IComponentData
+public partial struct MinCenterOfPressureComponent : IComponentData, ComponentId
 {
 }

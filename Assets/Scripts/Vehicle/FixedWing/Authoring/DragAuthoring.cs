@@ -24,22 +24,22 @@ public class DragAuthoring : MonoBehaviour
             fixedWingDragComponent.forwardArea = authoring.forwardProjectedArea;
             fixedWingDragComponent.maxForwardDragCoefficient = authoring.forwardDragAoACoefficients[^1].dragCoefficient;
             fixedWingDragComponent.forwardDragCoefficientAoACurve = new LowFidelityFixedAnimationCurve();
-            fixedWingDragComponent.forwardDragCoefficientAoACurve.Update(CreateCurveFromDragCoefficients(authoring.forwardDragAoACoefficients));
+            fixedWingDragComponent.forwardDragCoefficientAoACurve.SetCurve(CreateCurveFromDragCoefficients(authoring.forwardDragAoACoefficients));
 
             fixedWingDragComponent.backArea = authoring.backProjectedArea;
             fixedWingDragComponent.maxBackDragCoefficient = authoring.backwardDragAoACoefficients[^1].dragCoefficient;
             fixedWingDragComponent.backDragCoefficientAoACurve = new LowFidelityFixedAnimationCurve();
-            fixedWingDragComponent.backDragCoefficientAoACurve.Update(CreateCurveFromDragCoefficients(authoring.backwardDragAoACoefficients));
+            fixedWingDragComponent.backDragCoefficientAoACurve.SetCurve(CreateCurveFromDragCoefficients(authoring.backwardDragAoACoefficients));
 
             fixedWingDragComponent.rightSideArea = authoring.sideProjectedArea;
             fixedWingDragComponent.maxRightSideDragCoefficient = authoring.sideDragAoACoefficients[^1].dragCoefficient;
             fixedWingDragComponent.rightSideDragCoefficientAoACurve = new LowFidelityFixedAnimationCurve();
-            fixedWingDragComponent.rightSideDragCoefficientAoACurve.Update(CreateCurveFromDragCoefficients(authoring.sideDragAoACoefficients));
+            fixedWingDragComponent.rightSideDragCoefficientAoACurve.SetCurve(CreateCurveFromDragCoefficients(authoring.sideDragAoACoefficients));
 
             fixedWingDragComponent.leftSideArea = authoring.sideProjectedArea;
             fixedWingDragComponent.maxLeftSideDragCoefficient = authoring.sideDragAoACoefficients[^1].dragCoefficient;
             fixedWingDragComponent.leftSideDragCoefficientAoACurve = new LowFidelityFixedAnimationCurve();
-            fixedWingDragComponent.leftSideDragCoefficientAoACurve.Update(CreateCurveFromDragCoefficients(authoring.sideDragAoACoefficients));
+            fixedWingDragComponent.leftSideDragCoefficientAoACurve.SetCurve(CreateCurveFromDragCoefficients(authoring.sideDragAoACoefficients));
 
 
             AddComponent(entity, fixedWingDragComponent);

@@ -25,7 +25,7 @@ public partial class LiftAuthoring : MonoBehaviour
             fixedWingLiftComponent.minCoefficientLift = smallestLiftCoefficient;
             fixedWingLiftComponent.liftCurve = new HighFidelityFixedAnimationCurve();
 
-            fixedWingLiftComponent.liftCurve.Update(CreateCurveFromLiftCoefficients(authoring.liftCoefficientAoAValues, smallestLiftCoefficient, totalLiftCoefficient));
+            fixedWingLiftComponent.liftCurve.SetCurve(CreateCurveFromLiftCoefficients(authoring.liftCoefficientAoAValues, smallestLiftCoefficient, totalLiftCoefficient));
 
             AddComponent(GetEntity(TransformUsageFlags.Dynamic), fixedWingLiftComponent);
         }

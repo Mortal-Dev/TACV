@@ -1,5 +1,5 @@
 ﻿using Unity.Entities;
 
-public partial struct MaxCenterOfPressureComponent : IComponentData
+public partial struct MaxCenterOfPressureComponent : IComponentData, ComponentId
 {
 }

@@ -1,6 +1,6 @@
 ﻿using Unity.Entities;
 
-internal class LiftComponent
+public partial struct LiftComponent
 {
     public LowFidelityFixedAnimationCurve liftAoACurve;
 }

@@ -20,6 +20,9 @@ public partial class FixedWingInitializeSystem : SystemBase
             DynamicBuffer<LinkedEntityGroup> children = EntityManager.GetBuffer<LinkedEntityGroup>(entity);
 
             SetFixedWingEntities(ref fixedWingComponent, children);
+
+            SetLiftEntities(children);
+
         }).WithoutBurst().Run();
 
         entityCommandBuffer.Playback(EntityManager);
@@ -38,6 +41,40 @@ public partial class FixedWingInitializeSystem : SystemBase
 
         fixedWingComponent.centerOfPressureEntity = GetEntity<CenterOfPressureComponent>(children);
         fixedWingComponent.centerOfGravityEntity = GetEntity<CenterOfGravityComponent>(children);
+    }
+
+    //could use dictionary stuff here, but not worth it rn
+    public void SetLiftEntities(DynamicBuffer<LinkedEntityGroup> children)
+    {
+        foreach (LinkedEntityGroup linkedEntityGroup in children)
+        {
+            if (EntityManager.HasComponent<LiftGeneratingSurfaceComponent>(linkedEntityGroup.Value)) SetLiftEntity(linkedEntityGroup.Value, EntityManager.GetComponentData<LiftGeneratingSurfaceComponent>(linkedEntityGroup.Value), children);
+        }
+    }
+
+    private void SetLiftEntity(Entity liftGeneratingSurfaceEntity, LiftGeneratingSurfaceComponent liftGeneratingSurfaceComponent, DynamicBuffer<LinkedEntityGroup> children)
+    {
+        ComponentId componentId = liftGeneratingSurfaceComponent;
+
+        LiftGeneratingSurfaceComponent newLiftGeneratingSurfaceComponent = liftGeneratingSurfaceComponent;
+
+        foreach (LinkedEntityGroup linkedEntityGroup in children)
+        {
+
+            if (EntityManager.HasComponent<MaxCenterOfPressureComponent>(linkedEntityGroup.Value) && (EntityManager.GetComponentData<MaxCenterOfPressureComponent>(linkedEntityGroup.Value) as ComponentId).Id == componentId.Id)
+            {
+                newLiftGeneratingSurfaceComponent.maxCenterOfLiftEntity = linkedEntityGroup.Value;
+            }
+            else if (EntityManager.HasComponent<MinCenterOfPressureComponent>(linkedEntityGroup.Value) && (EntityManager.GetComponentData<MinCenterOfPressureComponent>(linkedEntityGroup.Value) as ComponentId).Id == componentId.Id)
+            {
+                newLiftGeneratingSurfaceComponent.minCenterOfLiftEntity = linkedEntityGroup.Value;
+            }
+
+            if (newLiftGeneratingSurfaceComponent.minCenterOfLiftEntity != Entity.Null && newLiftGeneratingSurfaceComponent.maxCenterOfLiftEntity != Entity.Null)
+                break;
+        }
+
+        EntityManager.SetComponentData(liftGeneratingSurfaceEntity, newLiftGeneratingSurfaceComponent);
     }
 
     private Entity GetEntity<T>(DynamicBuffer<LinkedEntityGroup> children) where T : unmanaged, IComponentData

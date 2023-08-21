@@ -12,7 +12,7 @@ public struct HighFidelityFixedAnimationCurve
 	private WrapMode preWrapMode;
 	private WrapMode postWrapMode;
 
-	public void Update(AnimationCurve curve, int resolution = 1023)
+	public void SetCurve(AnimationCurve curve, int resolution = 1023)
 	{
 		if (curve == null)
 			throw new NullReferenceException("Animation curve is null.");
@@ -96,7 +96,7 @@ public struct LowFidelityFixedAnimationCurve
 	private WrapMode preWrapMode;
 	private WrapMode postWrapMode;
 
-	public void Update(AnimationCurve curve, int resolution = 127)
+	public void SetCurve(AnimationCurve curve, int resolution = 127)
 	{
 		if (curve == null)
 			throw new NullReferenceException("Animation curve is null.");

@@ -3,17 +3,19 @@ using Unity.Entities;
 using Unity.Transforms;
 using Unity.Burst;
 using Unity.Collections;
+using System.Linq;
 using Riptide;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-[BurstCompile]
 public partial struct NetworkEntitySyncSystem : ISystem
 {
+    private NetworkManagerEntityComponent networkManagerEntityComponent;
 
-    [BurstCompile]
     public void OnUpdate(ref SystemState systemState)
     {
-        if (NetworkManager.Instance.NetworkType == NetworkType.None) return;
+        if (!SystemAPI.TryGetSingleton(out networkManagerEntityComponent)) return;
+        
+        if (networkManagerEntityComponent.NetworkType == NetworkType.None) return;
 
         foreach (var (localTransformRecord, localTransform, networkedEntityComponent, entity) in SystemAPI.Query<RefRW<PreviousLocalTransformRecordComponent>, RefRO<LocalTransform>, RefRO<NetworkedEntityComponent>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithEntityAccess())
         {
@@ -27,11 +29,11 @@ public partial struct NetworkEntitySyncSystem : ISystem
 
             DynamicBuffer<Child> children = SystemAPI.GetBuffer<Child>(entity);
 
-            List<NetworkedEntityChildMapLocalTransform> finalChangedChildrenMap = new List<NetworkedEntityChildMapLocalTransform>();
+            FixedList512Bytes<NetworkedEntityChildMapLocalTransform> finalChangedChildrenMap = new FixedList512Bytes<NetworkedEntityChildMapLocalTransform>();
 
             foreach (Child child in children)
             {
-                List<NetworkedEntityChildMapLocalTransform> changedChildrenMaps = PathChangedChildren(child, ref systemState);
+                FixedList512Bytes<NetworkedEntityChildMapLocalTransform> changedChildrenMaps = PathChangedChildren(child, ref systemState);
 
                 foreach (NetworkedEntityChildMapLocalTransform changedChildMap in changedChildrenMaps) finalChangedChildrenMap.Add(changedChildMap);
             }
@@ -40,16 +42,16 @@ public partial struct NetworkEntitySyncSystem : ISystem
         }
     }
 
-    private List<NetworkedEntityChildMapLocalTransform> PathChangedChildren(Child root, ref SystemState systemState)
+    private FixedList512Bytes<NetworkedEntityChildMapLocalTransform> PathChangedChildren(Child root, ref SystemState systemState)
     {
-        List<NetworkedEntityChildMapLocalTransform> result = new List<NetworkedEntityChildMapLocalTransform>();
+        FixedList512Bytes<NetworkedEntityChildMapLocalTransform> result = new FixedList512Bytes<NetworkedEntityChildMapLocalTransform>();
 
         FindChangedChildren(root, result, new NetworkedEntityChildMapLocalTransform(), ref systemState);
 
         return result;
     }
 
-    private void FindChangedChildren(Child root, List<NetworkedEntityChildMapLocalTransform> result, NetworkedEntityChildMapLocalTransform current, ref SystemState systemState)
+    private void FindChangedChildren(Child root, FixedList512Bytes<NetworkedEntityChildMapLocalTransform> result, NetworkedEntityChildMapLocalTransform current, ref SystemState systemState)
     {
         if (!SystemAPI.HasComponent<NetworkedEntityChildComponent>(root.Value)) return;
 
@@ -72,15 +74,15 @@ public partial struct NetworkEntitySyncSystem : ISystem
 
         foreach (Child child in children)
         {
-            FindChangedChildren(child, result, new NetworkedEntityChildMapLocalTransform() { NetworkedEntityChildMap = new List<int>(current.NetworkedEntityChildMap) }, ref systemState );
+            FindChangedChildren(child, result, new NetworkedEntityChildMapLocalTransform() { NetworkedEntityChildMap = current.NetworkedEntityChildMap }, ref systemState );
         }
 
         return;
     }
 
-    private void SendSyncMessage(ulong parentNetworkedEntityId, LocalTransform parentNetworkedEntityTransform, bool updateNetworkedEntityTransform, List<NetworkedEntityChildMapLocalTransform> changedChildMap)
+    private void SendSyncMessage(ulong parentNetworkedEntityId, LocalTransform parentNetworkedEntityTransform, bool updateNetworkedEntityTransform, FixedList512Bytes<NetworkedEntityChildMapLocalTransform> changedChildMap)
     {
-        Message message = Message.Create(MessageSendMode.Unreliable, (ushort)(NetworkManager.Instance.NetworkType == NetworkType.Server || NetworkManager.Instance.NetworkType == NetworkType.Host ? NetworkMessageId.ServerSyncEntity : NetworkMessageId.ClientSyncOwnedEntities));
+        Message message = Message.Create(MessageSendMode.Unreliable, (ushort)(networkManagerEntityComponent.NetworkType == NetworkType.Server || networkManagerEntityComponent.NetworkType == NetworkType.Host ? NetworkMessageId.ServerSyncEntity : NetworkMessageId.ClientSyncOwnedEntities));
 
         message.Add(parentNetworkedEntityId);
 
@@ -89,7 +91,7 @@ public partial struct NetworkEntitySyncSystem : ISystem
         //child might update, but parent might not
         if (updateNetworkedEntityTransform) message.AddLocalTransform(parentNetworkedEntityTransform);
 
-        message.Add(changedChildMap.Count);
+        message.Add(changedChildMap.Length);
 
         foreach (NetworkedEntityChildMapLocalTransform networkedEntityChildMapLocalTransform in changedChildMap)
         {
@@ -102,14 +104,9 @@ public partial struct NetworkEntitySyncSystem : ISystem
 
 }
 
-class NetworkedEntityChildMapLocalTransform
+partial struct NetworkedEntityChildMapLocalTransform
 {
-    public List<int> NetworkedEntityChildMap;
+    public FixedList512Bytes<int> NetworkedEntityChildMap;
 
     public LocalTransform LocalTransform;
-
-    public NetworkedEntityChildMapLocalTransform()
-    {
-        NetworkedEntityChildMap = new List<int>();
-    }
 }

@@ -8,33 +8,48 @@ using UnityEngine;
 [UpdateBefore(typeof(FixedWingStateSystem))]
 public partial struct FixedWingEnginePowerSystem : ISystem
 {
+    EntityQuery networkEntityQuery;
+
+    public void OnCreate(ref SystemState systemState)
+    {
+        networkEntityQuery = systemState.GetEntityQuery(ComponentType.ReadWrite<FixedWingComponent>(), ComponentType.ReadWrite<PhysicsMass>(), ComponentType.ReadWrite<PhysicsVelocity>(), 
+            ComponentType.ReadOnly<LocalTransform>(), ComponentType.ReadOnly<LocalOwnedNetworkedEntityComponent>());
+    }
+
     public void OnUpdate(ref SystemState systemState)
     {
-        if (NetworkManager.Instance.NetworkType == NetworkType.None)
+        if (!SystemAPI.TryGetSingleton(out NetworkManagerEntityComponent networkManagerEntityComponent)) return;
+
+        if (networkManagerEntityComponent.NetworkType == NetworkType.None)
         {
-            foreach (var (fixedWingComponent, physicsMass, physicsVelocity, localTransform) in SystemAPI.Query<RefRW<FixedWingComponent>, RefRW<PhysicsMass>, RefRW<PhysicsVelocity>, RefRO<LocalTransform>>())
-                UpdateEngineThrust(fixedWingComponent, physicsMass, physicsVelocity, localTransform, ref systemState);        
+            new FixedWingEnginePowerJob() { deltaTime = SystemAPI.Time.DeltaTime }.ScheduleParallel(systemState.Dependency).Complete();
         }
         else
         {
-            foreach (var (fixedWingComponent, physicsMass, physicsVelocity, localTransform) in SystemAPI.Query<RefRW<FixedWingComponent>, RefRW<PhysicsMass>, RefRW<PhysicsVelocity>, RefRO<LocalTransform>>().WithAll<LocalOwnedNetworkedEntityComponent>())
-                UpdateEngineThrust(fixedWingComponent, physicsMass, physicsVelocity, localTransform, ref systemState);
+            new FixedWingEnginePowerJob() { deltaTime = SystemAPI.Time.DeltaTime }.ScheduleParallel(networkEntityQuery, systemState.Dependency).Complete();
         }
     }
 
-    private void UpdateEngineThrust(RefRW<FixedWingComponent> fixedWingComponent, RefRW<PhysicsMass> physicsMass, RefRW<PhysicsVelocity> physicsVelocity, RefRO<LocalTransform> localTransform, ref SystemState systemState)
+    partial struct FixedWingEnginePowerJob : IJobEntity
     {
-        foreach (Entity engineEntity in fixedWingComponent.ValueRO.engineEntities)
+        public float deltaTime;
+
+        public void Execute(ref FixedWingComponent fixedWingComponent, ref PhysicsMass physicsMass, ref PhysicsVelocity physicsVelocity, in LocalTransform localTransform)
         {
-            EngineComponent engineComponent = SystemAPI.GetComponent<EngineComponent>(engineEntity);
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
-            LocalTransform engineLocalTransform = SystemAPI.GetComponent<LocalTransform>(engineEntity);
+            foreach (Entity engineEntity in fixedWingComponent.engineEntities)
+            {
+                EngineComponent engineComponent = entityManager.GetComponentData<EngineComponent>(engineEntity);
 
-            engineComponent.currentPower = engineComponent.maxAfterBurnerPowerNewtons * fixedWingComponent.ValueRO.throttle;
+                LocalTransform engineLocalTransform = entityManager.GetComponentData<LocalTransform>(engineEntity);
 
-            physicsVelocity.ValueRW.ApplyImpulse(physicsMass.ValueRO, physicsMass.ValueRO.Transform.pos, physicsMass.ValueRO.Transform.rot, ((Vector3)localTransform.ValueRO.Forward()).normalized * engineComponent.maxAfterBurnerPowerNewtons * SystemAPI.Time.DeltaTime, engineLocalTransform.Position);
+                engineComponent.currentPower = engineComponent.maxAfterBurnerPowerNewtons * fixedWingComponent.throttle;
 
-            break;
+                physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, ((Vector3)localTransform.Forward()).normalized * engineComponent.maxAfterBurnerPowerNewtons * deltaTime, engineLocalTransform.Position);
+
+                break;
+            }
         }
     }
 }

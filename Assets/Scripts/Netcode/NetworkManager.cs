@@ -5,17 +5,7 @@ using System;
 
 public class NetworkManager
 {
-    public static NetworkManager Instance
-    {
-        get
-        {
-            if (networkManager == null) networkManager = new NetworkManager();
-
-            return networkManager;
-        }
-    }
-
-    private static NetworkManager networkManager;
+    public static NetworkManager Instance = new NetworkManager();
 
     public const ushort SERVER_NET_ID = ushort.MaxValue;
 

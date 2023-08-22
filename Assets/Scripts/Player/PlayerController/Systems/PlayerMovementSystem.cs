@@ -16,10 +16,24 @@ using Unity.Physics.Systems;
 [BurstCompile]
 public partial struct PlayerMovementSystem : ISystem
 {
+    EntityQuery networkEntityQuery;
+
+    [BurstCompile]
+    public void OnCreate(ref SystemState systemState)
+    {
+        networkEntityQuery = systemState.GetEntityQuery(ComponentType.ReadWrite<PlayerControllerComponent>(), ComponentType.ReadOnly<PlayerControllerInputComponent>(), ComponentType.ReadOnly<Simulate>(),
+            ComponentType.ReadOnly<LocalOwnedNetworkedEntityComponent>());
+    }
+
     [BurstCompile]
     public void OnUpdate(ref SystemState systemState)
     {
-        if (NetworkManager.Instance.NetworkType == NetworkType.Server) return;
+        if (!SystemAPI.TryGetSingleton(out NetworkManagerEntityComponent networkManagerEntityComponent)) return;
+
+        if (networkManagerEntityComponent.NetworkType == NetworkType.None)
+        {
+
+        }
 
         SetPlayerRotation(ref systemState);
 

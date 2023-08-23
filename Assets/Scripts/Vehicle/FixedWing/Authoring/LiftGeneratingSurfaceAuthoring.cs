@@ -18,7 +18,7 @@ public class LiftGeneratingSurfaceAuthoring : MonoBehaviour
 
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
 
-            AddComponent(entity, new LiftGeneratingSurfaceComponent() { Id = authoring.positionId, AoALiftCoefficientPercentageCurve = lowFidelityFixedAnimationCurve });
+            AddComponent(entity, new LiftGeneratingSurfaceComponent() { Id = authoring.positionId, PitchAoALiftCoefficientPercentageCurve = lowFidelityFixedAnimationCurve });
         }
 
         private AnimationCurve CreateAnimationCurveFromAoALiftCoefficientValues(AoALiftCoefficientPercentageValue[] aoALiftCoefficientPercentageValues)

@@ -1,5 +1,6 @@
 ﻿using Unity.Entities;
 using Unity.Burst;
+using Unity.Collections;
 using Unity.Physics;
 using Unity.Physics.Extensions;
 using Unity.Transforms;
@@ -12,19 +13,56 @@ using System.Runtime.InteropServices;
 [BurstCompile]
 public partial struct FixedWingLiftSystem : ISystem
 {
+    EntityQuery networkEntityQuery;
+
+    [BurstCompile]
+    public void OnCreate(ref SystemState systemState)
+    {
+        networkEntityQuery = systemState.GetEntityQuery(ComponentType.ReadWrite<LiftGeneratingSurfaceComponent>(), ComponentType.ReadWrite<LocalTransform>(), ComponentType.ReadOnly<Parent>(),
+            ComponentType.ReadOnly<NetworkedEntityChildComponent>());   
+    }
+
     [BurstCompile]
     public void OnUpdate(ref SystemState systemState)
     {
-        new UpdateLiftJob().ScheduleParallel(systemState.Dependency).Complete();
+        if (!SystemAPI.TryGetSingleton(out NetworkManagerEntityComponent networkManagerEntityComponent)) return;
+
+        if (networkManagerEntityComponent.NetworkType == NetworkType.None)
+        {
+            new UpdateLiftJob().ScheduleParallel(systemState.Dependency).Complete();
+        }
+        else
+        {
+            new UpdateLiftJob().ScheduleParallel(networkEntityQuery, systemState.Dependency).Complete();
+        }
+
     }
 
     [BurstCompile]
     [StructLayout(LayoutKind.Auto)]
     partial struct UpdateLiftJob : IJobEntity
     {
-        public void Execute(ref CenterOfPressureComponent centerOfPressureComponent, ref LocalTransform localTransform, in Parent parent)
+        public void Execute(Entity entity, ref LiftGeneratingSurfaceComponent liftGeneratingSurfaceComponent, ref LocalTransform localTransform, in Parent parent)
         {
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
+            if (!entityManager.HasComponent<FixedWingComponent>(parent.Value))
+            {
+                Debug.LogError("attempting to put lift on a non fixed wing, make sure all lift gameobject/entities are direct children of the fixed wing");
+                return;
+            }
+
+            FixedWingComponent fixedWingComponent = entityManager.GetComponentData<FixedWingComponent>(parent.Value);
+
+
+
+            
+        }
+
+        private void ProcessPitchLift(ref LiftGeneratingSurfaceComponent liftGeneratingSurfaceComponent, ref LocalTransform localTransform, in Parent parent, 
+            EntityManager entityManager)
+        {
+            FixedWingLiftComponent fixedWingLiftComponent = 
         }
     }
 

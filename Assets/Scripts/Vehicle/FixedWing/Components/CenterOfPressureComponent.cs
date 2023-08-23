@@ -3,8 +3,8 @@ using Unity.Mathematics;
 
 public partial struct CenterOfPressureComponent : IComponentData
 {
-    public float3 maxCenterOfPressure;
-    public float3 minCenterOfPressure;
+    public Entity maxCenterOfPressureEntity;
+    public Entity minCenterOfPressureEntity;
 
     public LowFidelityFixedAnimationCurve centerOfPressureCurve;
 }

@@ -23,9 +23,9 @@ public partial class LiftAuthoring : MonoBehaviour
             fixedWingLiftComponent.topArea = authoring.fixedWingTopArea;
             fixedWingLiftComponent.maxCoefficientLift = largestLiftCoefficient;
             fixedWingLiftComponent.minCoefficientLift = smallestLiftCoefficient;
-            fixedWingLiftComponent.liftCurve = new HighFidelityFixedAnimationCurve();
+            fixedWingLiftComponent.pitchLiftCurve = new HighFidelityFixedAnimationCurve();
 
-            fixedWingLiftComponent.liftCurve.SetCurve(CreateCurveFromLiftCoefficients(authoring.liftCoefficientAoAValues, smallestLiftCoefficient, totalLiftCoefficient));
+            fixedWingLiftComponent.pitchLiftCurve.SetCurve(CreateCurveFromLiftCoefficients(authoring.liftCoefficientAoAValues, smallestLiftCoefficient, totalLiftCoefficient));
 
             AddComponent(GetEntity(TransformUsageFlags.Dynamic), fixedWingLiftComponent);
         }

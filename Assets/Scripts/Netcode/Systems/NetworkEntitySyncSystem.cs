@@ -29,29 +29,29 @@ public partial struct NetworkEntitySyncSystem : ISystem
 
             DynamicBuffer<Child> children = SystemAPI.GetBuffer<Child>(entity);
 
-            FixedList512Bytes<NetworkedEntityChildMapLocalTransform> finalChangedChildrenMap = new FixedList512Bytes<NetworkedEntityChildMapLocalTransform>();
+            FixedList512Bytes<NetworkedEntityChildrenMap> finalChangedChildrenMap = new FixedList512Bytes<NetworkedEntityChildrenMap>();
 
             foreach (Child child in children)
             {
-                FixedList512Bytes<NetworkedEntityChildMapLocalTransform> changedChildrenMaps = PathChangedChildren(child, ref systemState);
+                FixedList512Bytes<NetworkedEntityChildrenMap> changedChildrenMaps = GetChangedChildrenPaths(child, ref systemState);
 
-                foreach (NetworkedEntityChildMapLocalTransform changedChildMap in changedChildrenMaps) finalChangedChildrenMap.Add(changedChildMap);
+                foreach (NetworkedEntityChildrenMap changedChildMap in changedChildrenMaps) finalChangedChildrenMap.Add(changedChildMap);
             }
 
             SendSyncMessage(networkedEntityComponent.ValueRO.networkEntityId, localTransform.ValueRO, updateLocalTransformOfParentEntity, finalChangedChildrenMap);
         }
     }
 
-    private FixedList512Bytes<NetworkedEntityChildMapLocalTransform> PathChangedChildren(Child root, ref SystemState systemState)
+    private FixedList512Bytes<NetworkedEntityChildrenMap> GetChangedChildrenPaths(Child root, ref SystemState systemState)
     {
-        FixedList512Bytes<NetworkedEntityChildMapLocalTransform> result = new FixedList512Bytes<NetworkedEntityChildMapLocalTransform>();
+        FixedList512Bytes<NetworkedEntityChildrenMap> result = new FixedList512Bytes<NetworkedEntityChildrenMap>();
 
-        FindChangedChildren(root, result, new NetworkedEntityChildMapLocalTransform(), ref systemState);
+        FindChangedChildren(root, ref result, new NetworkedEntityChildrenMap(), ref systemState);
 
         return result;
     }
 
-    private void FindChangedChildren(Child root, FixedList512Bytes<NetworkedEntityChildMapLocalTransform> result, NetworkedEntityChildMapLocalTransform current, ref SystemState systemState)
+    private void FindChangedChildren(Child root, ref FixedList512Bytes<NetworkedEntityChildrenMap> result, NetworkedEntityChildrenMap current, ref SystemState systemState)
     {
         if (!SystemAPI.HasComponent<NetworkedEntityChildComponent>(root.Value)) return;
 
@@ -74,13 +74,13 @@ public partial struct NetworkEntitySyncSystem : ISystem
 
         foreach (Child child in children)
         {
-            FindChangedChildren(child, result, new NetworkedEntityChildMapLocalTransform() { NetworkedEntityChildMap = current.NetworkedEntityChildMap }, ref systemState );
+            FindChangedChildren(child, ref result, new NetworkedEntityChildrenMap() { NetworkedEntityChildMap = current.NetworkedEntityChildMap }, ref systemState );
         }
 
         return;
     }
 
-    private void SendSyncMessage(ulong parentNetworkedEntityId, LocalTransform parentNetworkedEntityTransform, bool updateNetworkedEntityTransform, FixedList512Bytes<NetworkedEntityChildMapLocalTransform> changedChildMap)
+    private void SendSyncMessage(ulong parentNetworkedEntityId, LocalTransform parentNetworkedEntityTransform, bool updateNetworkedEntityTransform, FixedList512Bytes<NetworkedEntityChildrenMap> changedChildMap)
     {
         Message message = Message.Create(MessageSendMode.Unreliable, (ushort)(networkManagerEntityComponent.NetworkType == NetworkType.Server || networkManagerEntityComponent.NetworkType == NetworkType.Host ? NetworkMessageId.ServerSyncEntity : NetworkMessageId.ClientSyncOwnedEntities));
 
@@ -93,7 +93,7 @@ public partial struct NetworkEntitySyncSystem : ISystem
 
         message.Add(changedChildMap.Length);
 
-        foreach (NetworkedEntityChildMapLocalTransform networkedEntityChildMapLocalTransform in changedChildMap)
+        foreach (NetworkedEntityChildrenMap networkedEntityChildMapLocalTransform in changedChildMap)
         {
             message.AddInts(networkedEntityChildMapLocalTransform.NetworkedEntityChildMap.ToArray());
             message.AddLocalTransform(networkedEntityChildMapLocalTransform.LocalTransform);
@@ -104,7 +104,7 @@ public partial struct NetworkEntitySyncSystem : ISystem
 
 }
 
-partial struct NetworkedEntityChildMapLocalTransform
+partial struct NetworkedEntityChildrenMap
 {
     public FixedList512Bytes<int> NetworkedEntityChildMap;
 

@@ -4,7 +4,9 @@ public partial struct LiftGeneratingSurfaceComponent : IComponentData, Component
 {
     public int Id { get; set; }
 
-    public LowFidelityFixedAnimationCurve AoALiftCoefficientPercentageCurve;
+    public LowFidelityFixedAnimationCurve PitchAoALiftCoefficientPercentageCurve;
+
+    public LowFidelityFixedAnimationCurve YawAoALiftCoefficientPercentageCurve;
 
     public Entity maxCenterOfLiftEntity;
 

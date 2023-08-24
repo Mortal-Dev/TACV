@@ -26,13 +26,15 @@ public partial struct FixedWingLiftSystem : ISystem
     {
         if (!SystemAPI.TryGetSingleton(out NetworkManagerEntityComponent networkManagerEntityComponent)) return;
 
+        ComponentLookup<FixedWingComponent> fixedWingComponentLookup = systemState.GetComponentLookup<FixedWingComponent>();
+
         if (networkManagerEntityComponent.NetworkType == NetworkType.None)
         {
-            new UpdateLiftJob() { entityManager = systemState.EntityManager }.ScheduleParallel(systemState.Dependency).Complete();
+            new UpdateLiftJob() { fixedWingComponentLookup = fixedWingComponentLookup }.ScheduleParallel(systemState.Dependency).Complete();
         }
         else
         {
-            new UpdateLiftJob() { entityManager = systemState.EntityManager }.ScheduleParallel(networkEntityQuery, systemState.Dependency).Complete();
+            new UpdateLiftJob() { fixedWingComponentLookup = fixedWingComponentLookup }.ScheduleParallel(networkEntityQuery, systemState.Dependency).Complete();
         }
 
     }
@@ -41,17 +43,15 @@ public partial struct FixedWingLiftSystem : ISystem
     [StructLayout(LayoutKind.Auto)]
     partial struct UpdateLiftJob : IJobEntity
     {
-        [ReadOnly] public EntityManager entityManager;
+        public ComponentLookup<FixedWingComponent> fixedWingComponentLookup;
 
         public void Execute(Entity entity, ref LiftGeneratingSurfaceComponent liftGeneratingSurfaceComponent, ref LocalTransform localTransform, in Parent parent)
         {
-            if (!entityManager.HasComponent<FixedWingComponent>(parent.Value))
+            if (!fixedWingComponentLookup.TryGetComponent(parent.Value, out FixedWingComponent fixedWingComponent))
             {
                 Debug.LogError("attempting to put lift on a non fixed wing, make sure all lift gameobject/entities are direct children of the fixed wing");
                 return;
             }
-
-            FixedWingComponent fixedWingComponent = entityManager.GetComponentData<FixedWingComponent>(parent.Value);
         }
 
         private void ProcessPitchLift(ref LiftGeneratingSurfaceComponent liftGeneratingSurfaceComponent, ref LocalTransform localTransform, in Parent parent, 

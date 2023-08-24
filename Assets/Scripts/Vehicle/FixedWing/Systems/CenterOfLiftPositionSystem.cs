@@ -24,13 +24,15 @@ public partial struct CenterOfLiftPositionSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState systemState)
     {
-        if (NetworkManager.Instance.NetworkType == NetworkType.None)
+        if (!SystemAPI.TryGetSingleton(out NetworkManagerEntityComponent networkManagerEntityComponent)) return;
+
+        if (networkManagerEntityComponent.NetworkType == NetworkType.None)
         {
-            new UpdateCenterOfPressureJob().ScheduleParallel(systemState.Dependency).Complete();
+            new UpdateCenterOfPressureJob() { entityManager = systemState.EntityManager }.ScheduleParallel(systemState.Dependency).Complete();
         }
         else
         {
-            new UpdateCenterOfPressureJob().ScheduleParallel(networkEntityQuery, systemState.Dependency).Complete();
+            new UpdateCenterOfPressureJob() { entityManager = systemState.EntityManager }.ScheduleParallel(networkEntityQuery, systemState.Dependency).Complete();
         }
     }
 
@@ -38,13 +40,11 @@ public partial struct CenterOfLiftPositionSystem : ISystem
     [StructLayout(LayoutKind.Auto)]
     partial struct UpdateCenterOfPressureJob : IJobEntity
     {
+        [ReadOnly] public EntityManager entityManager;
+
         public void Execute(Entity entity, ref LocalTransform localTransform, in CenterOfPressureComponent centerOfPressureComponent, in Parent parent)
         {
-            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-
-            FixedWingComponent fixedWingComponent = entityManager.GetComponentData<FixedWingComponent>(parent.Value);
-
-            
+            FixedWingComponent fixedWingComponent = entityManager.GetComponentData<FixedWingComponent>(parent.Value);   
         }
     }
 }

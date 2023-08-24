@@ -18,7 +18,6 @@ public partial struct PlayerMovementSystem : ISystem
 {
     EntityQuery networkEntityQuery;
 
-    [BurstCompile]
     public void OnCreate(ref SystemState systemState)
     {
         networkEntityQuery = systemState.GetEntityQuery(ComponentType.ReadWrite<PlayerControllerComponent>(), ComponentType.ReadOnly<PlayerControllerInputComponent>(), ComponentType.ReadOnly<Simulate>(),
@@ -113,10 +112,13 @@ public partial struct PlayerMovementSystem : ISystem
     {
         foreach (var (characterControllerLocalTransform, entity) in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<PlayerControllerComponent>().WithEntityAccess())
         {
+
             DynamicBuffer<LinkedEntityGroup> dynamicLinkedEntityGroupBuffer = systemState.EntityManager.GetBuffer<LinkedEntityGroup>(entity);
 
-            foreach (LinkedEntityGroup linkedEntityGroup in dynamicLinkedEntityGroupBuffer)
+            for (int i = 0; i < dynamicLinkedEntityGroupBuffer.Length; i++)
             {
+                LinkedEntityGroup linkedEntityGroup = dynamicLinkedEntityGroupBuffer[i];
+
                 if (!SystemAPI.HasComponent<HeadComponent>(linkedEntityGroup.Value)) continue;
 
                 RefRO<LocalTransform> headLocalTransform = SystemAPI.GetComponentRO<LocalTransform>(entity);

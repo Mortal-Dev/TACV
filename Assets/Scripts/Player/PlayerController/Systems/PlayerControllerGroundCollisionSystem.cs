@@ -17,7 +17,7 @@ public partial struct PlayerControllerGroundCollisionSystem : ISystem
 {
     EntityQuery networkedEntityQuery;
 
-    [BurstCompile]
+
     public void OnCreate(ref SystemState systemState)
     {
         networkedEntityQuery = systemState.GetEntityQuery(ComponentType.ReadOnly<LocalTransform>(), ComponentType.ReadWrite<PlayerControllerComponent>(), ComponentType.ReadOnly<LocalOwnedNetworkedEntityComponent>());
@@ -32,11 +32,11 @@ public partial struct PlayerControllerGroundCollisionSystem : ISystem
 
         if (networkManagerEntity.NetworkType == NetworkType.None)
         {
-            new PlayerControllerGroundCollisionJob().ScheduleParallel(systemState.Dependency).Complete();
+            new PlayerControllerGroundCollisionJob() { entityManager = systemState.EntityManager }.ScheduleParallel(systemState.Dependency).Complete();
         }
         else
         {
-            new PlayerControllerGroundCollisionJob().ScheduleParallel(networkedEntityQuery, systemState.Dependency).Complete();
+            new PlayerControllerGroundCollisionJob() { entityManager = systemState.EntityManager }.ScheduleParallel(networkedEntityQuery, systemState.Dependency).Complete();
         }
 
        /* foreach (var (localTransfrom, playerControllerCmponent) in SystemAPI.Query<RefRO<LocalTransform>, RefRW<PlayerControllerComponent>>().WithAll<LocalOwnedNetworkedEntityComponent>())
@@ -67,15 +67,20 @@ public partial struct PlayerControllerGroundCollisionSystem : ISystem
     [BurstCompile]
     partial struct PlayerControllerGroundCollisionJob : IJobEntity
     {
+        [ReadOnly] public EntityManager entityManager;
+
         public void Execute(in LocalTransform localTransform, ref PlayerControllerComponent playerControllerComponent)
         {
-            NativeList<ColliderCastHit> sphereCastColliderHits = PhysicsHelper.SphereCast(CollisionFilter.Default, localTransform.Position, -localTransform.Up(), 0.2f, 1.1f);
+
+            NativeList<ColliderCastHit> sphereCastColliderHits = PhysicsHelper.SphereCast(CollisionFilter.Default, localTransform.Position, -localTransform.Up(), 0.2f, 1.1f, entityManager);
 
             //we always collide with ourselves, so if there's more, we are on the ground
             if (sphereCastColliderHits.Length > 1)
                 playerControllerComponent.playerState = PlayerState.Moving;
             else
                 playerControllerComponent.playerState = PlayerState.InAir;
+
+            sphereCastColliderHits.Dispose();
         }
     }
 }

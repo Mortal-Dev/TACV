@@ -15,7 +15,9 @@ public partial struct FixedWingDragSystem : ISystem
     {
         deltaTime = SystemAPI.Time.DeltaTime;
 
-        if (NetworkManager.Instance.NetworkType == NetworkType.None)
+        if (!SystemAPI.TryGetSingleton(out NetworkManagerEntityComponent networkManagerEntityComponent)) return;
+
+        if (networkManagerEntityComponent.NetworkType == NetworkType.None)
         {
             foreach (var (fixedWingDragComponent, fixedWingComponent, physicsMass, physicsVelocity, localTransform) in SystemAPI.Query<RefRW<FixedWingDragComponent>, RefRW<FixedWingComponent>, RefRW<PhysicsMass>, RefRW<PhysicsVelocity>, RefRW<LocalTransform>>().
                 WithNone<UninitializedFixedWingComponent>())

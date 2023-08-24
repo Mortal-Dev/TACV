@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Physics;
 using Unity.Physics.Extensions;
@@ -13,7 +14,7 @@ public partial struct FixedWingEnginePowerSystem : ISystem
 {
     EntityQuery networkEntityQuery;
 
-    [BurstCompile]
+
     public void OnCreate(ref SystemState systemState)
     {
         networkEntityQuery = systemState.GetEntityQuery(ComponentType.ReadWrite<FixedWingComponent>(), ComponentType.ReadWrite<PhysicsMass>(), ComponentType.ReadWrite<PhysicsVelocity>(), 
@@ -39,9 +40,9 @@ public partial struct FixedWingEnginePowerSystem : ISystem
     [BurstCompile]
     partial struct FixedWingEnginePowerJob : IJobEntity
     {
-        public EntityManager entityManager;
+        [WriteOnly] public EntityManager entityManager;
 
-        public float deltaTime;
+        [ReadOnly] public float deltaTime;
 
         public void Execute(ref FixedWingComponent fixedWingComponent, ref PhysicsMass physicsMass, ref PhysicsVelocity physicsVelocity, in LocalTransform localTransform)
         {

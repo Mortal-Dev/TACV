@@ -8,6 +8,8 @@ public partial struct LiftGeneratingSurfaceComponent : IComponentData, Component
 
     public LowFidelityFixedAnimationCurve YawAoALiftCoefficientPercentageCurve;
 
+    public Entity liftEntity;
+
     public Entity maxCenterOfLiftEntity;
 
     public Entity minCenterOfLiftEntity;

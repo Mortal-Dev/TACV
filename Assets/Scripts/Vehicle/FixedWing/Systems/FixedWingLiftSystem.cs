@@ -15,10 +15,15 @@ public partial struct FixedWingLiftSystem : ISystem
 {
     EntityQuery networkEntityQuery;
 
+    ComponentLookup<FixedWingComponent> fixedWingComponentLookup;
+
     public void OnCreate(ref SystemState systemState)
     {
         networkEntityQuery = systemState.GetEntityQuery(ComponentType.ReadWrite<LiftGeneratingSurfaceComponent>(), ComponentType.ReadWrite<LocalTransform>(), ComponentType.ReadOnly<Parent>(),
             ComponentType.ReadOnly<NetworkedEntityChildComponent>());
+
+        fixedWingComponentLookup = systemState.GetComponentLookup<FixedWingComponent>();
+
     }
 
     [BurstCompile]
@@ -26,7 +31,7 @@ public partial struct FixedWingLiftSystem : ISystem
     {
         if (!SystemAPI.TryGetSingleton(out NetworkManagerEntityComponent networkManagerEntityComponent)) return;
 
-        ComponentLookup<FixedWingComponent> fixedWingComponentLookup = systemState.GetComponentLookup<FixedWingComponent>();
+        fixedWingComponentLookup.Update(ref systemState);
 
         if (networkManagerEntityComponent.NetworkType == NetworkType.None)
         {

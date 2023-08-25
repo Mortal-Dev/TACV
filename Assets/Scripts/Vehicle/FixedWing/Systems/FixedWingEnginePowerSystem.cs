@@ -14,11 +14,18 @@ public partial struct FixedWingEnginePowerSystem : ISystem
 {
     EntityQuery networkEntityQuery;
 
+    ComponentLookup<EngineComponent> engineComponentLookup;
+
+    ComponentLookup<LocalTransform> localTransformLookup;
 
     public void OnCreate(ref SystemState systemState)
     {
         networkEntityQuery = systemState.GetEntityQuery(ComponentType.ReadWrite<FixedWingComponent>(), ComponentType.ReadWrite<PhysicsMass>(), ComponentType.ReadWrite<PhysicsVelocity>(), 
             ComponentType.ReadOnly<LocalTransform>(), ComponentType.ReadOnly<LocalOwnedNetworkedEntityComponent>());
+
+        engineComponentLookup = systemState.GetComponentLookup<EngineComponent>();
+
+        localTransformLookup = systemState.GetComponentLookup<LocalTransform>();
     }
 
     [BurstCompile]
@@ -26,13 +33,18 @@ public partial struct FixedWingEnginePowerSystem : ISystem
     {
         if (!SystemAPI.TryGetSingleton(out NetworkManagerEntityComponent networkManagerEntityComponent)) return;
 
+        engineComponentLookup.Update(ref systemState);
+        localTransformLookup.Update(ref systemState);
+
+        FixedWingEnginePowerJob fixedWingEnginePowerJob = new FixedWingEnginePowerJob() { deltaTime = SystemAPI.Time.DeltaTime, engineComponentLookup = engineComponentLookup, localTransformLookup = localTransformLookup };
+
         if (networkManagerEntityComponent.NetworkType == NetworkType.None)
         {
-            new FixedWingEnginePowerJob() { entityManager = systemState.EntityManager, deltaTime = SystemAPI.Time.DeltaTime }.ScheduleParallel(systemState.Dependency).Complete();
+            fixedWingEnginePowerJob.ScheduleParallel(systemState.Dependency).Complete();
         }
         else
         {
-            new FixedWingEnginePowerJob() { entityManager = systemState.EntityManager, deltaTime = SystemAPI.Time.DeltaTime }.ScheduleParallel(networkEntityQuery, systemState.Dependency).Complete();
+            fixedWingEnginePowerJob.ScheduleParallel(networkEntityQuery, systemState.Dependency).Complete();
         }
     }
 
@@ -40,17 +52,27 @@ public partial struct FixedWingEnginePowerSystem : ISystem
     [BurstCompile]
     partial struct FixedWingEnginePowerJob : IJobEntity
     {
-        [WriteOnly] public EntityManager entityManager;
-
         [ReadOnly] public float deltaTime;
+
+        [ReadOnly] public ComponentLookup<EngineComponent> engineComponentLookup;
+
+        [ReadOnly] public ComponentLookup<LocalTransform> localTransformLookup;
 
         public void Execute(ref FixedWingComponent fixedWingComponent, ref PhysicsMass physicsMass, ref PhysicsVelocity physicsVelocity, in LocalTransform localTransform)
         {
             foreach (Entity engineEntity in fixedWingComponent.engineEntities)
             {
-                EngineComponent engineComponent = entityManager.GetComponentData<EngineComponent>(engineEntity);
+                if (!engineComponentLookup.TryGetComponent(engineEntity, out EngineComponent engineComponent))
+                {
+                    Debug.LogError("engine entity does not have engine component");
+                    return;
+                }
 
-                LocalTransform engineLocalTransform = entityManager.GetComponentData<LocalTransform>(engineEntity);
+                if (!localTransformLookup.TryGetComponent(engineEntity, out LocalTransform engineLocalTransform))
+                {
+                    Debug.LogError("uanble to find transform for engine entity");
+                    return;
+                }
 
                 engineComponent.currentPower = engineComponent.maxAfterBurnerPowerNewtons * fixedWingComponent.throttle;
 

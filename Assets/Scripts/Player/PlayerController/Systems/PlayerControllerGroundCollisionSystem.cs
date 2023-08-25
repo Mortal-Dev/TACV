@@ -9,6 +9,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using Unity.Jobs;
 using System;
+using System.Diagnostics;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 [UpdateBefore(typeof(PlayerMovementSystem))]
@@ -30,49 +31,26 @@ public partial struct PlayerControllerGroundCollisionSystem : ISystem
 
         if (!SystemAPI.HasSingleton<PhysicsWorldSingleton>()) return;
 
+        CollisionWorld collisionWorld = systemState.GetEntityQuery(ComponentType.ReadWrite<PhysicsWorldSingleton>()).GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
+
         if (networkManagerEntity.NetworkType == NetworkType.None)
         {
-            new PlayerControllerGroundCollisionJob() { entityManager = systemState.EntityManager }.ScheduleParallel(systemState.Dependency).Complete();
+            new PlayerControllerGroundCollisionJob() { collisionWorld = collisionWorld }.ScheduleParallel(systemState.Dependency).Complete();
         }
         else
         {
-            new PlayerControllerGroundCollisionJob() { entityManager = systemState.EntityManager }.ScheduleParallel(networkedEntityQuery, systemState.Dependency).Complete();
+            new PlayerControllerGroundCollisionJob() { collisionWorld = collisionWorld }.ScheduleParallel(networkedEntityQuery, systemState.Dependency).Complete();
         }
-
-       /* foreach (var (localTransfrom, playerControllerCmponent) in SystemAPI.Query<RefRO<LocalTransform>, RefRW<PlayerControllerComponent>>().WithAll<LocalOwnedNetworkedEntityComponent>())
-        {
-            NativeList<ColliderCastHit> sphereCastColliderHits = PhysicsHelper.SphereCast(CollisionFilter.Default, localTransfrom.ValueRO.Position, -localTransfrom.ValueRO.Up(), 0.2f, 1.1f);
-
-            //we always collide with ourselves, so if there's more, we are on the ground
-            if (sphereCastColliderHits.Length > 1)
-                playerControllerCmponent.ValueRW.playerState = PlayerState.Moving;
-            else
-                playerControllerCmponent.ValueRW.playerState = PlayerState.InAir;
-
-            return;
-        }
-
-        foreach (var (localTransfrom, playerControllerCmponent) in SystemAPI.Query<RefRO<LocalTransform>, RefRW<PlayerControllerComponent>>())
-        {
-            NativeList<ColliderCastHit> sphereCastColliderHits = PhysicsHelper.SphereCast(CollisionFilter.Default, localTransfrom.ValueRO.Position, -localTransfrom.ValueRO.Up(), 0.2f, 1.1f);
-
-            //we always collide with ourselves, so if there's more, we are on the ground
-            if (sphereCastColliderHits.Length > 1)
-                playerControllerCmponent.ValueRW.playerState = PlayerState.Moving;
-            else
-                playerControllerCmponent.ValueRW.playerState = PlayerState.InAir;
-        }*/
     }
 
     [BurstCompile]
     partial struct PlayerControllerGroundCollisionJob : IJobEntity
     {
-        [ReadOnly] public EntityManager entityManager;
+        [ReadOnly] public CollisionWorld collisionWorld;
 
         public void Execute(in LocalTransform localTransform, ref PlayerControllerComponent playerControllerComponent)
         {
-
-            NativeList<ColliderCastHit> sphereCastColliderHits = PhysicsHelper.SphereCast(CollisionFilter.Default, localTransform.Position, -localTransform.Up(), 0.2f, 1.1f, entityManager);
+            NativeList<ColliderCastHit> sphereCastColliderHits = PhysicsHelper.SphereCast(CollisionFilter.Default, localTransform.Position, -localTransform.Up(), 0.2f, 1.1f, collisionWorld);
 
             //we always collide with ourselves, so if there's more, we are on the ground
             if (sphereCastColliderHits.Length > 1)

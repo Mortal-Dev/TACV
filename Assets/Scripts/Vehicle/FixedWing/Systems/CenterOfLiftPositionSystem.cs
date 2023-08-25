@@ -16,9 +16,13 @@ public partial struct CenterOfLiftPositionSystem : ISystem
 {
     EntityQuery networkEntityQuery;
 
+    ComponentLookup<FixedWingComponent> fixedWingComponentLookup;
+
     public void OnCreate(ref SystemState systemState)
     {
         networkEntityQuery = systemState.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<LocalTransform>(), ComponentType.ReadOnly<FixedWingComponent>(), ComponentType.ReadOnly<Parent>(), ComponentType.ReadOnly<LocalOwnedNetworkedEntityComponent>());
+
+        fixedWingComponentLookup = systemState.GetComponentLookup<FixedWingComponent>();
     }
 
     [BurstCompile]
@@ -26,13 +30,15 @@ public partial struct CenterOfLiftPositionSystem : ISystem
     {
         if (!SystemAPI.TryGetSingleton(out NetworkManagerEntityComponent networkManagerEntityComponent)) return;
 
+        fixedWingComponentLookup.Update(ref systemState);
+
         if (networkManagerEntityComponent.NetworkType == NetworkType.None)
         {
-            new UpdateCenterOfPressureJob() { entityManager = systemState.EntityManager }.ScheduleParallel(systemState.Dependency).Complete();
+            new UpdateCenterOfPressureJob() { fixedWingComponentLookup = fixedWingComponentLookup }.ScheduleParallel(systemState.Dependency).Complete();
         }
         else
         {
-            new UpdateCenterOfPressureJob() { entityManager = systemState.EntityManager }.ScheduleParallel(networkEntityQuery, systemState.Dependency).Complete();
+            new UpdateCenterOfPressureJob() { fixedWingComponentLookup = fixedWingComponentLookup }.ScheduleParallel(networkEntityQuery, systemState.Dependency).Complete();
         }
     }
 
@@ -40,11 +46,13 @@ public partial struct CenterOfLiftPositionSystem : ISystem
     [StructLayout(LayoutKind.Auto)]
     partial struct UpdateCenterOfPressureJob : IJobEntity
     {
-        [ReadOnly] public EntityManager entityManager;
+        [ReadOnly] public ComponentLookup<FixedWingComponent> fixedWingComponentLookup;
 
         public void Execute(Entity entity, ref LocalTransform localTransform, in CenterOfPressureComponent centerOfPressureComponent, in Parent parent)
         {
-            FixedWingComponent fixedWingComponent = entityManager.GetComponentData<FixedWingComponent>(parent.Value);   
+            RefRO<FixedWingComponent> fixedWingComponent = fixedWingComponentLookup.GetRefRO(parent.Value);
+
+            //FixedWingComponent fixedWingComponent = entityManager.GetComponentData<FixedWingComponent>(parent.Value);   
         }
     }
 }

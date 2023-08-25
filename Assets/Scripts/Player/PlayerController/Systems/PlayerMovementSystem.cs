@@ -5,6 +5,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
+using Unity.Physics.Extensions;
 using Unity.Collections;
 using System;
 using UnityEngine;
@@ -78,10 +79,10 @@ public partial struct PlayerMovementSystem : ISystem
     [BurstCompile]
     private void PlayerControllerMoving(RefRW<PlayerControllerComponent> playerController, RefRW<PhysicsVelocity> physicsVelocity, RefRW<LocalTransform> localTransform, RefRO<PlayerControllerInputComponent> input)
     {
-        //forwards/backwards rw
+        //forwards/backwards
         physicsVelocity.ValueRW.Linear += localTransform.ValueRO.Forward() * input.ValueRO.leftControllerThumbstick.y * (input.ValueRO.leftControllerThumbstick.y > 0 ? playerController.ValueRO.forwardForce : playerController.ValueRO.backwardForce);
 
-        //left/right //rw
+        //left/right
         physicsVelocity.ValueRW.Linear += localTransform.ValueRO.Right() * input.ValueRO.leftControllerThumbstick.x * playerController.ValueRO.sideForce;
 
         //cap velocities
@@ -94,7 +95,7 @@ public partial struct PlayerMovementSystem : ISystem
         else if (input.ValueRO.leftControllerThumbstick.x != 0 && velocityVector3.magnitude > playerController.ValueRO.maxSideVelocity)
             physicsVelocity.ValueRW.Linear = velocityVector3.normalized * playerController.ValueRO.maxSideVelocity;
 
-        physicsVelocity.ValueRW.Linear = velocityVector3;
+        //physicsVelocity.ValueRW.Linear = velocityVector3;
 
         //remove angular velocity
         physicsVelocity.ValueRW.Angular = float3.zero;

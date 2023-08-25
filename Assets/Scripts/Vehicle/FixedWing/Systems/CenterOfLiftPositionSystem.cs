@@ -51,8 +51,6 @@ public partial struct CenterOfLiftPositionSystem : ISystem
         public void Execute(Entity entity, ref LocalTransform localTransform, in CenterOfPressureComponent centerOfPressureComponent, in Parent parent)
         {
             RefRO<FixedWingComponent> fixedWingComponent = fixedWingComponentLookup.GetRefRO(parent.Value);
-
-            //FixedWingComponent fixedWingComponent = entityManager.GetComponentData<FixedWingComponent>(parent.Value);   
         }
     }
 }

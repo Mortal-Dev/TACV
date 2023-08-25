@@ -12,16 +12,17 @@ using System;
 using System.Diagnostics;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-[UpdateBefore(typeof(PlayerMovementSystem))]
 [BurstCompile]
 public partial struct PlayerControllerGroundCollisionSystem : ISystem
 {
     EntityQuery networkedEntityQuery;
 
+    EntityQuery physicsWorldSingletonQuery;
 
     public void OnCreate(ref SystemState systemState)
     {
         networkedEntityQuery = systemState.GetEntityQuery(ComponentType.ReadOnly<LocalTransform>(), ComponentType.ReadWrite<PlayerControllerComponent>(), ComponentType.ReadOnly<LocalOwnedNetworkedEntityComponent>());
+        physicsWorldSingletonQuery = systemState.GetEntityQuery(ComponentType.ReadWrite<PhysicsWorldSingleton>());
     }
 
     [BurstCompile]
@@ -31,7 +32,7 @@ public partial struct PlayerControllerGroundCollisionSystem : ISystem
 
         if (!SystemAPI.HasSingleton<PhysicsWorldSingleton>()) return;
 
-        CollisionWorld collisionWorld = systemState.GetEntityQuery(ComponentType.ReadWrite<PhysicsWorldSingleton>()).GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
+        CollisionWorld collisionWorld = physicsWorldSingletonQuery.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
 
         if (networkManagerEntity.NetworkType == NetworkType.None)
         {

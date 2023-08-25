@@ -1,6 +1,6 @@
 ﻿using Unity.Entities;
 
-[UpdateBefore(typeof(FixedStepSimulationSystemGroup))]
+[UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 public partial struct NetorkedManagerEntityControllerSystem : ISystem
 {
     public void OnUpdate(ref SystemState systemState)

@@ -87,7 +87,7 @@ public partial class SyncLocalPlayerToXROriginSystem : SystemBase
     //would use a generic method for these, but unity DOTS code gen no likey
     private RefRW<LocalTransform> GetEntityLeftHandTransform()
     {
-        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithAll<LeftHandComponent>())
+        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<NetworkedEntityChildComponent>().WithAll<LeftHandComponent>())
             return localTransform;
 
         foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LeftHandComponent>())
@@ -100,7 +100,7 @@ public partial class SyncLocalPlayerToXROriginSystem : SystemBase
 
     private RefRW<LocalTransform> GetEntityRightHandTransform()
     {
-        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithAll<RightHandComponent>())
+        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<NetworkedEntityChildComponent>().WithAll<RightHandComponent>())
             return localTransform;
 
         foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<RightHandComponent>())
@@ -113,7 +113,7 @@ public partial class SyncLocalPlayerToXROriginSystem : SystemBase
 
     private RefRW<LocalTransform> GetEntityHeadTransform()
     {
-        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithAll<HeadComponent>())
+        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<NetworkedEntityChildComponent>().WithAll<HeadComponent>())
             return localTransform;
 
         foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<HeadComponent>())

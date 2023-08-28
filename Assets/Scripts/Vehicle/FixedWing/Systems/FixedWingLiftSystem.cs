@@ -35,11 +35,11 @@ public partial struct FixedWingLiftSystem : ISystem
 
         if (networkManagerEntityComponent.NetworkType == NetworkType.None)
         {
-            new UpdateLiftJob() { fixedWingComponentLookup = fixedWingComponentLookup }.ScheduleParallel(systemState.Dependency).Complete();
+            new UpdateLiftJob() { fixedWingComponentLookup = fixedWingComponentLookup }.ScheduleParallel(systemState.Dependency);
         }
         else
         {
-            new UpdateLiftJob() { fixedWingComponentLookup = fixedWingComponentLookup }.ScheduleParallel(networkEntityQuery, systemState.Dependency).Complete();
+            new UpdateLiftJob() { fixedWingComponentLookup = fixedWingComponentLookup }.ScheduleParallel(networkEntityQuery, systemState.Dependency);
         }
 
     }
@@ -63,35 +63,10 @@ public partial struct FixedWingLiftSystem : ISystem
             EntityManager entityManager)
         {
             FixedWingLiftComponent fixedWingLiftComponent = entityManager.GetComponentData<FixedWingLiftComponent>(liftGeneratingSurfaceComponent.liftEntity);
-
-            
         }
     }
 
-    /*[BurstCompile]
-    public void OnUpdate(ref SystemState systemState)
-    {
-        if (NetworkManager.Instance.NetworkType == NetworkType.None)
-        {
-            foreach (var (fixedWingComponent, fixedWingLiftComponent, physicsMass, localTransform, physicsVelocity) in SystemAPI.Query<RefRO<FixedWingComponent>, RefRW<FixedWingLiftComponent>, RefRO<PhysicsMass>, 
-                RefRO<LocalTransform>, RefRW<PhysicsVelocity>>())
-            {
-                UpdateLift(fixedWingComponent, fixedWingLiftComponent, physicsMass, localTransform, physicsVelocity, ref systemState);
-            }
-        }
-        else
-        {
-            foreach (var (fixedWingComponent, fixedWingLiftComponent, physicsMass, localTransform, physicsVelocity) in SystemAPI.Query<RefRO<FixedWingComponent>, RefRW<FixedWingLiftComponent>, RefRO<PhysicsMass>, 
-                RefRO<LocalTransform>, RefRW<PhysicsVelocity>>()
-                .WithAll<LocalOwnedNetworkedEntityComponent>())
-            {
-                UpdateLift(fixedWingComponent, fixedWingLiftComponent, physicsMass, localTransform, physicsVelocity, ref systemState);
-            }
-        }
-        
-    }
-
-    private void UpdateLift(RefRO<FixedWingComponent> fixedWingComponent, RefRW<FixedWingLiftComponent> fixedWingLiftComponent, RefRO<PhysicsMass> physicsMass, RefRO<LocalTransform> localTransform, 
+    /*private void UpdateLift(RefRO<FixedWingComponent> fixedWingComponent, RefRW<FixedWingLiftComponent> fixedWingLiftComponent, RefRO<PhysicsMass> physicsMass, RefRO<LocalTransform> localTransform, 
         RefRW<PhysicsVelocity> physicsVelocity, ref SystemState systemState)
     {
         float angleOfAttack = fixedWingComponent.ValueRO.angleOfAttack;

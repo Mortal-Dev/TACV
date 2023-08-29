@@ -88,13 +88,11 @@
     <Compile Include="Assets\Scripts\Netcode\Attributes\ServerSystemAttribute.cs" />
     <Compile Include="Assets\Scripts\Vehicle\FixedWing\Authoring\FixedWingAuthoring.cs" />
     <Compile Include="Assets\Scripts\NetworkTestController.cs" />
-    <Compile Include="Assets\Scripts\Vehicle\FixedWing\Components\LiftComponent.cs" />
-    <Compile Include="Assets\Scripts\Vehicle\FixedWing\Systems\FixedWingEnginePowerSystem.cs" />
     <Compile Include="Assets\TutorialInfo\Scripts\Readme.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerController\Components\PlayerControllerGroundCollisionComponent.cs" />
     <Compile Include="Assets\Scripts\Vehicle\FixedWing\Systems\CenterOfLiftPositionSystem.cs" />
     <Compile Include="Assets\Scripts\Netcode\Components\NetworkedEntityChildComponent.cs" />
-	<Compile Include="Assets\Scripts\Netcode\Components\NetworkManagerEntityComponent.cs" />
+    <Compile Include="Assets\Scripts\Netcode\Components\NetworkManagerEntityComponent.cs" />
     <Compile Include="Assets\Scripts\Vehicle\FixedWing\Components\LeadingEdgeFlapComponent.cs" />
     <Compile Include="Assets\Scripts\Netcode\NetworkManager.cs" />
     <Compile Include="Assets\Scripts\Netcode\Components\PreviousLocalTransformRecordComponent.cs" />
@@ -137,6 +135,7 @@
     <Compile Include="Assets\Scripts\Vehicle\FixedWing\Authoring\AirBrakeAuthoring.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerController\Systems\SyncLocalPlayerToXROriginSystem.cs" />
     <Compile Include="Assets\Scripts\Vehicle\FixedWing\Components\EngineComponent.cs" />
+	<Compile Include="Assets\Scripts\Vehcile\FixedWing\Systems\FixedWingEngineSystem.cs" />
     <Compile Include="Assets\Scripts\Netcode\NetworkSceneEntityManagement\HostNetworkedEntityContainer.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerController\Components\PlayerControllerInputComponent.cs" />
     <Compile Include="Assets\Scripts\Vehicle\FixedWing\Systems\FixedWingDragSystem.cs" />
@@ -169,6 +168,7 @@
     <Compile Include="Assets\Scripts\Netcode\Utils\ManagedNetworkSystems.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerController\Systems\PlayerMovementSystem.cs" />
     <Compile Include="Assets\Scripts\Netcode\Systems\NetworkEntitySyncSystem.cs" />
+    <Compile Include="Assets\Scripts\Netcode\Systems\NetorkedManagerEntityControllerSystem.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerController\Authoring\PlayerControllerGroundColliderAuthoring.cs" />
     <Compile Include="Assets\Scripts\Netcode\NetworkSceneEntityManagement\ClientNetworkedEntityContainer.cs" />
     <Compile Include="Assets\Scripts\Vehicle\FixedWing\Components\MaxCenterOfPressureComponent.cs" />

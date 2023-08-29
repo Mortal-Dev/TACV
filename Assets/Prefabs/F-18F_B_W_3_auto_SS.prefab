@@ -1440,7 +1440,7 @@ GameObject:
   - component: {fileID: 4444622411934892217}
   - component: {fileID: 6591174434622807432}
   m_Layer: 0
-  m_Name: MinCenterOfPressure
+  m_Name: FusulageMinCenterOfPressure
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1696,9 +1696,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 746017383482066268}
-  - component: {fileID: 2421606207377499012}
+  - component: {fileID: 5775154294907663048}
   m_Layer: 0
-  m_Name: CenterOfPressure
+  m_Name: FusulageCenterOfPressure
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1719,7 +1719,7 @@ Transform:
   m_Father: {fileID: 509404930941555515}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2421606207377499012
+--- !u!114 &5775154294907663048
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1728,9 +1728,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 3458516350239472700}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 43c6531c34ed22b49aea4478ef5d31d1, type: 3}
+  m_Script: {fileID: 11500000, guid: de255102d93f346419b7285f8c263f5d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  positionId: 0
+  AoALiftCoefficientPercentageValues:
+  - AngleOfAttack: 90
+    LiftCoefficientPercentage: 1
+  - AngleOfAttack: 0
+    LiftCoefficientPercentage: 1
+  - AngleOfAttack: -90
+    LiftCoefficientPercentage: 1
 --- !u!1 &3503956276028404566
 GameObject:
   m_ObjectHideFlags: 0
@@ -2577,7 +2585,7 @@ GameObject:
   - component: {fileID: 219651288847886749}
   - component: {fileID: 8577261867765303160}
   m_Layer: 0
-  m_Name: MaxCenterOfPressure
+  m_Name: FusulageMaxCenterOfPressure
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2817,13 +2825,12 @@ Transform:
   - {fileID: 5637143033950535673}
   - {fileID: 3380945886210147652}
   - {fileID: 2244578528202019285}
-  - {fileID: 746017383482066268}
   - {fileID: 7136267221316853561}
+  - {fileID: 746017383482066268}
   - {fileID: 219651288847886749}
   - {fileID: 4444622411934892217}
   - {fileID: 2790342407817109514}
   - {fileID: 7634355173738319899}
-  - {fileID: 1394827006563440086}
   - {fileID: 3468123972222605247}
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -4333,37 +4340,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &6981903170930457788
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1394827006563440086}
-  m_Layer: 0
-  m_Name: BodyCenterOfPressure
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1394827006563440086
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6981903170930457788}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.08, y: 0.23, z: 2.8}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 509404930941555515}
-  m_RootOrder: -1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7000503205642180491
 GameObject:
   m_ObjectHideFlags: 0

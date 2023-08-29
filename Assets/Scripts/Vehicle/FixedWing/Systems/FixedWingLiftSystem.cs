@@ -10,7 +10,6 @@ using System.Runtime.InteropServices;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 [UpdateAfter(typeof(FixedWingStateSystem))]
-[BurstCompile]
 public partial struct FixedWingLiftSystem : ISystem
 {
     EntityQuery networkEntityQuery;
@@ -26,7 +25,6 @@ public partial struct FixedWingLiftSystem : ISystem
 
     }
 
-    [BurstCompile]
     public void OnUpdate(ref SystemState systemState)
     {
         if (!SystemAPI.TryGetSingleton(out NetworkManagerEntityComponent networkManagerEntityComponent)) return;
@@ -35,40 +33,41 @@ public partial struct FixedWingLiftSystem : ISystem
 
         if (networkManagerEntityComponent.NetworkType == NetworkType.None)
         {
-            new UpdateLiftJob() { fixedWingLiftComponentLookup = fixedWingLiftComponentLookup, deltaTime = SystemAPI.Time.DeltaTime }.ScheduleParallel(systemState.Dependency);
+            new UpdateLiftJob() { fixedWingLiftComponentLookup = fixedWingLiftComponentLookup, deltaTime = SystemAPI.Time.DeltaTime }.ScheduleParallel(systemState.Dependency).Complete();
         }
         else
         {
-            new UpdateLiftJob() { fixedWingLiftComponentLookup = fixedWingLiftComponentLookup, deltaTime = SystemAPI.Time.DeltaTime }.ScheduleParallel(networkEntityQuery, systemState.Dependency);
+            new UpdateLiftJob() { fixedWingLiftComponentLookup = fixedWingLiftComponentLookup, deltaTime = SystemAPI.Time.DeltaTime }.ScheduleParallel(networkEntityQuery, systemState.Dependency).Complete();
         }
 
     }
 
-    [BurstCompile]
     [StructLayout(LayoutKind.Auto)]
     partial struct UpdateLiftJob : IJobEntity
     {
         [ReadOnly] public float deltaTime;
 
-        public EntityCommandBuffer.ParallelWriter parallelWriter;
+//        public EntityCommandBuffer.ParallelWriter parallelWriter;
 
-        public EntityManager entityManager;
+       // public EntityManager entityManager;
 
-        public ComponentLookup<FixedWingLiftComponent> fixedWingLiftComponentLookup;
+        [ReadOnly] public ComponentLookup<FixedWingLiftComponent> fixedWingLiftComponentLookup;
 
-        public void Execute(Entity entity, ref LiftGeneratingSurfaceComponent liftGeneratingSurfaceComponent, ref LocalTransform localTransform, in Parent parent)
+        public void Execute(ref LiftGeneratingSurfaceComponent liftGeneratingSurfaceComponent, ref LocalTransform localTransform, in Parent parent)
         {
             if (!fixedWingLiftComponentLookup.TryGetComponent(parent.Value, out FixedWingLiftComponent fixedWingLiftComponent))
             {
                 Debug.LogError("attempting to put lift on a non fixed wing, make sure all lift gameobject/entities are direct children of the fixed wing");
                 return;
             }
+
+            ProcessPitchLift(ref liftGeneratingSurfaceComponent, ref localTransform, fixedWingLiftComponent, in parent);
         }
 
         private void ProcessPitchLift(ref LiftGeneratingSurfaceComponent liftGeneratingSurfaceComponent, ref LocalTransform liftGeneratingSurfaceLocalTransform, 
             FixedWingLiftComponent fixedWingLiftComponent, in Parent parent)
         {
-            float3 liftGeneratingSurfaceGlobalPosition = liftGeneratingSurfaceLocalTransform.TransformPoint(liftGeneratingSurfaceLocalTransform.Position);
+            float3 liftGeneratingSurfaceGlobalPosition = float3.zero;//liftGeneratingSurfaceLocalTransform.TransformPoint(liftGeneratingSurfaceLocalTransform.Position);
 
             float difference = Vector3.Distance(liftGeneratingSurfaceGlobalPosition, new float3(0, 0, 0));
 
@@ -80,13 +79,17 @@ public partial struct FixedWingLiftSystem : ISystem
 
             float pitchLiftCoefficient = fixedWingLiftComponent.pitchLiftCurve.Evaluate(pitchAngleOfAttack) * liftGeneratingSurfaceComponent.PitchAoALiftCoefficientPercentageCurve.Evaluate(pitchAngleOfAttack);
 
-            float pitchLiftForce = pitchLiftCoefficient * (AirDensity.GetAirDensityFromMeters(liftGeneratingSurfaceGlobalPosition.y) * 0.5f) * (speed * speed) * fixedWingLiftComponent.topArea;
+            //float pitchLiftForce = pitchLiftCoefficient * (AirDensity.GetAirDensityFromMeters(liftGeneratingSurfaceGlobalPosition.y) * 0.5f) * (speed * speed) * fixedWingLiftComponent.topArea;
 
-            PhysicsVelocity physicsVelocity = entityManager.GetComponentData<PhysicsVelocity>(parent.Value);
+            //PhysicsVelocity physicsVelocity = entityManager.GetComponentData<PhysicsVelocity>(parent.Value);
 
-            PhysicsMass physicsMass = entityManager.GetComponentData<PhysicsMass>(parent.Value);
+           // PhysicsMass physicsMass = entityManager.GetComponentData<PhysicsMass>(parent.Value);
 
-            physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, )
+            Quaternion test = quaternion.AxisAngle(liftGeneratingSurfaceLocalTransform.Up(), 90);
+
+            Debug.Log(test.eulerAngles);
+
+            //physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, quaternion.AxisAngle(liftGeneratingSurfaceLocalTransform.Up(), 90) * 
         }
     }
 

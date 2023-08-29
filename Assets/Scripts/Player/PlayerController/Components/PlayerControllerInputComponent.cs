@@ -23,5 +23,4 @@ public struct PlayerControllerInputComponent : IComponentData
 
     public float2 leftControllerThumbstick;
     public bool leftControllerThumbstickPress;
-
 }

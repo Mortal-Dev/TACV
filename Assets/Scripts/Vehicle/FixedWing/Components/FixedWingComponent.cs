@@ -33,4 +33,6 @@ public partial struct FixedWingComponent : IComponentData
     public FixedList128Bytes<Entity> stabilatorEntities;
 
     public FixedList128Bytes<Entity> airleronEntities;
+
+    public FixedList128Bytes<Entity> liftGeneratingSurfaceEntities;
 }

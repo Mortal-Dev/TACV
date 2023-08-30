@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Physics;
 using Unity.Physics.Extensions;
@@ -65,7 +66,9 @@ public partial struct FixedWingEngineSystem : ISystem
 
         [ReadOnly] public ComponentLookup<EngineComponent> engineComponentLookup;
 
-        [ReadOnly] public ComponentLookup<LocalTransform> localTransformLookup;
+        [NativeDisableContainerSafetyRestriction]
+        [ReadOnly] 
+        public ComponentLookup<LocalTransform> localTransformLookup;
 
         public EntityCommandBuffer.ParallelWriter parallelWriterEntityCommandBuffer;
 

@@ -1,4 +1,5 @@
 ﻿using Unity.Entities;
+using Unity.Mathematics;
 
 public partial struct LiftGeneratingSurfaceComponent : IComponentData, ComponentId
 {
@@ -13,4 +14,10 @@ public partial struct LiftGeneratingSurfaceComponent : IComponentData, Component
     public Entity maxCenterOfLiftEntity;
 
     public Entity minCenterOfLiftEntity;
+
+    public float3 lastGlobalPosition;
+
+    public float3 lastLocalPosition;
+
+    public float3 calculatedLiftForce;
 }

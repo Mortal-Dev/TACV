@@ -1,33 +1,57 @@
 ﻿using System.Collections.Generic;
 using Unity.Mathematics;
+using Unity.Collections;
 using System.Linq;
+using UnityEngine;
 
-public static class AirDensity
+public partial struct AirDensity
 {
-    //density in meters - kilograms / meter cubed
-    private static Dictionary<float, float> altitudeDensity = new Dictionary<float, float>()
+    private static readonly FixedList512Bytes<float> altitudes = new FixedList512Bytes<float>()
     {
-        { -1000, 1.347f },
-        { 0, 1.225f },
-        { 1000, 1.112f },
-        { 2000, 1.007f },
-        { 3000, 0.9093f },
-        { 4000, 0.8194f },
-        { 5000, 0.7364f },
-        { 6000, 0.6601f },
-        { 7000, 0.5900f },
-        { 8000, 0.5258f },
-        { 9000, 0.4671f },
-        { 10000, 0.4135f },
-        { 15000, 0.1948f },
-        { 20000, 0.08891f },
-        { 25000, 0.04008f },
-        { 30000, 0.01841f },
-        { 40000, 0.003996f },
-        { 50000, 0.001027f },
-        { 60000, 0.0003097f },
-        { 70000, 0.00008283f },
-        { 80000, 0.00001846f }
+        -1000,
+        0,
+        1000,
+        2000,
+        4000,
+        5000,
+        6000,
+        7000,
+        8000,
+        9000,
+        10000,
+        15000,
+        20000,
+        25000,
+        30000,
+        40000,
+        50000,
+        60000,
+        70000,
+        80000
+    };
+
+    private static readonly FixedList512Bytes<float> airDensity = new FixedList512Bytes<float>()
+    {
+        1.347f,
+        1.225f,
+        1.007f,
+        0.9093f,
+        0.8194f,
+        0.7364f,
+        0.6601f,
+        0.5900f,
+        0.5258f,
+        0.4671f,
+        0.4135f,
+        0.1948f,
+        0.08891f,
+        0.04008f,
+        0.01841f,
+        0.003996f,
+        0.001027f,
+        0.0003097f,
+        0.00008283f,
+        0.00001846f
     };
 
     public static float GetAirDensityFromFeet(float altitudeFeet)
@@ -40,15 +64,15 @@ public static class AirDensity
         KeyValuePair<float, float> upperAirAltitudeDensity = new(float.NegativeInfinity, float.NegativeInfinity);
         KeyValuePair<float, float> lowerAirAltitudeDensity = new(float.NegativeInfinity, float.NegativeInfinity);
 
-        foreach (KeyValuePair<float, float> airAltitudeDensity in altitudeDensity.Reverse())
+        for (int i = altitudes.Length - 1; i >= 0; i--)
         {
-            if (altitudeMeters >= airAltitudeDensity.Key)
+            if (altitudeMeters >= altitudes[i])
             {
-                lowerAirAltitudeDensity = airAltitudeDensity;
+                lowerAirAltitudeDensity = new KeyValuePair<float, float>(altitudes[i], airDensity[i]);
                 break;
             }
 
-            upperAirAltitudeDensity = airAltitudeDensity;
+            upperAirAltitudeDensity = new KeyValuePair<float, float>(altitudes[i], airDensity[i]);
         }
 
         return math.lerp(upperAirAltitudeDensity.Value, lowerAirAltitudeDensity.Value, (upperAirAltitudeDensity.Key - altitudeMeters) / (upperAirAltitudeDensity.Key - lowerAirAltitudeDensity.Key));

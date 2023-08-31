@@ -1,5 +1,6 @@
 ﻿using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Transforms;
 
 public partial struct LiftGeneratingSurfaceComponent : IComponentData, ComponentId
 {
@@ -15,9 +16,9 @@ public partial struct LiftGeneratingSurfaceComponent : IComponentData, Component
 
     public Entity minCenterOfLiftEntity;
 
-    public float3 lastGlobalPosition;
+    public LocalTransform lastGlobalPosition;
 
     public float3 lastLocalPosition;
 
-    public float3 calculatedLiftForce;
+    public float calculatedLiftForce;
 }

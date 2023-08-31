@@ -89,11 +89,11 @@ partial struct UpdateLiftJob : IJobEntity
     {
         LocalTransform parentTransform = localTransformComponentLookup[parent.Value];
 
-        float3 liftGeneratingSurfaceGlobalPosition = liftGeneratingSurfaceLocalTransform.TransformPoint(parentTransform.Position);
+        LocalTransform liftGeneratingSurfaceGlobalTransform = liftGeneratingSurfaceLocalTransform.TransformTransform(parentTransform);
 
-        if (liftGeneratingSurfaceComponent.lastGlobalPosition.Equals(float3.zero)) liftGeneratingSurfaceComponent.lastGlobalPosition = liftGeneratingSurfaceGlobalPosition;
+        if (liftGeneratingSurfaceComponent.lastGlobalPosition.Position.Equals(float3.zero)) liftGeneratingSurfaceComponent.lastGlobalPosition = liftGeneratingSurfaceGlobalTransform;
         
-        float differenceMeters = Vector3.Distance(liftGeneratingSurfaceGlobalPosition, liftGeneratingSurfaceComponent.lastGlobalPosition);
+        float differenceMeters = Vector3.Distance(liftGeneratingSurfaceGlobalTransform.Position, liftGeneratingSurfaceComponent.lastGlobalPosition.Position);
 
         float metersPerSecond = differenceMeters / deltaTime;
 
@@ -101,13 +101,13 @@ partial struct UpdateLiftJob : IJobEntity
 
         float pitchLiftCoefficient = fixedWingLiftComponent.pitchLiftCurve.Evaluate(pitchAngleOfAttack) * liftGeneratingSurfaceComponent.PitchAoALiftCoefficientPercentageCurve.Evaluate(pitchAngleOfAttack);
 
-        float liftPower = 0.5f * AirDensity.GetAirDensityFromMeters(liftGeneratingSurfaceGlobalPosition.y) * (metersPerSecond * metersPerSecond) * 40 * pitchLiftCoefficient;
+        float liftPower = 0.5f * AirDensity.GetAirDensityFromMeters(liftGeneratingSurfaceGlobalTransform.Position.y) * (metersPerSecond * metersPerSecond) * 40 * pitchLiftCoefficient;
 
-        liftGeneratingSurfaceComponent.calculatedLiftForce = Normalize(liftGeneratingSurfaceLocalTransform.Up()) * liftPower;
+        liftGeneratingSurfaceComponent.calculatedLiftForce = liftPower;
 
         liftGeneratingSurfaceComponent.lastLocalPosition = liftGeneratingSurfaceLocalTransform.Position;
 
-        liftGeneratingSurfaceComponent.lastGlobalPosition = liftGeneratingSurfaceGlobalPosition;
+        liftGeneratingSurfaceComponent.lastGlobalPosition = liftGeneratingSurfaceGlobalTransform;
     }
 
     public static float Magnitude(float3 vector) { return (float)math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z); }
@@ -121,6 +121,16 @@ partial struct UpdateLiftJob : IJobEntity
             return float3.zero;
     }
 
+    static float3 RotateVectorAroundZ(float3 vector, float angle)
+    {
+        float sinTheta = math.sin(angle);
+        float cosTheta = math.cos(angle);
+
+        float newX = vector.x * cosTheta - vector.y * sinTheta;
+        float newY = vector.x * sinTheta + vector.y * cosTheta;
+
+        return new float3(newX, newY, vector.z);
+    }
 }
 
 [StructLayout(LayoutKind.Auto)]
@@ -137,6 +147,9 @@ partial struct ApplyLiftJob : IJobEntity
         foreach (Entity liftGeneratingEntity in fixedWingComponent.liftGeneratingSurfaceEntities)
         {
             LiftGeneratingSurfaceComponent liftGeneratingSurfaceComponent = liftGeneratingSurfaceComponentLookup[liftGeneratingEntity];
+
+            float3 velocity = physicsVelocity.Linear;
+
 
             physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, liftGeneratingSurfaceComponent.calculatedLiftForce, liftGeneratingSurfaceComponent.lastLocalPosition);
         }

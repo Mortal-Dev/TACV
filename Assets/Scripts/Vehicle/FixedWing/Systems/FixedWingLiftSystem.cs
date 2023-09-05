@@ -99,21 +99,27 @@ partial struct UpdateLiftJob : IJobEntity
     {
         LocalTransform parentTransform = localTransformComponentLookup[parent.Value];
 
-        float3 liftGeneratingSurfaceGlobalPosition = liftGeneratingSurfaceLocalTransform.TransformPoint(parentTransform.Position);
+        LocalTransform liftGeneratingSurfaceGlobalTransform = liftGeneratingSurfaceLocalTransform.TransformTransform(parentTransform);
 
-        if (liftGeneratingSurfaceComponent.lastGlobalPosition.Equals(float3.zero)) liftGeneratingSurfaceComponent.lastGlobalPosition = liftGeneratingSurfaceGlobalPosition;
+        if (liftGeneratingSurfaceComponent.lastGlobalPosition.Position.Equals(float3.zero)) liftGeneratingSurfaceComponent.lastGlobalPosition = liftGeneratingSurfaceGlobalTransform;
         
-        float differenceMeters = Vector3.Distance(liftGeneratingSurfaceGlobalPosition, liftGeneratingSurfaceComponent.lastGlobalPosition);
+        float differenceMeters = Vector3.Distance(liftGeneratingSurfaceGlobalTransform.Position, liftGeneratingSurfaceComponent.lastGlobalPosition.Position);
 
         float metersPerSecond = differenceMeters / deltaTime;
 
         float liftCoefficient = fixedWingLiftComponent.pitchLiftCurve.Evaluate(fixedWingComponent.angleOfAttack) * liftGeneratingSurfaceComponent.PitchAoALiftCoefficientPercentageCurve.Evaluate(fixedWingComponent.angleOfAttack);
 
-        float liftForce = 0.5f * AirDensity.GetAirDensityFromMeters(liftGeneratingSurfaceGlobalPosition.y) * (metersPerSecond * metersPerSecond) * liftGeneratingSurfaceComponent.liftArea * liftCoefficient;
+        float liftForce = 0.5f * AirDensity.GetAirDensityFromMeters(liftGeneratingSurfaceGlobalTransform.Position.y) * (metersPerSecond * metersPerSecond) * liftGeneratingSurfaceComponent.liftArea * liftCoefficient;
 
         liftGeneratingSurfaceComponent.calculatedLiftForce = liftForce;
 
-        liftGeneratingSurfaceComponent.lastGlobalPosition = liftGeneratingSurfaceGlobalPosition;
+        float liftPower = 0.5f * AirDensity.GetAirDensityFromMeters(liftGeneratingSurfaceGlobalTransform.Position.y) * (metersPerSecond * metersPerSecond) * 40 * liftCoefficient;
+
+        liftGeneratingSurfaceComponent.calculatedLiftForce = liftPower;
+
+        liftGeneratingSurfaceComponent.lastLocalPosition = liftGeneratingSurfaceLocalTransform.Position;
+
+        liftGeneratingSurfaceComponent.lastGlobalPosition = liftGeneratingSurfaceGlobalTransform;
     }
 
     public static float Magnitude(float3 vector) { return (float)math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z); }
@@ -127,6 +133,16 @@ partial struct UpdateLiftJob : IJobEntity
             return float3.zero;
     }
 
+    static float3 RotateVectorAroundZ(float3 vector, float angle)
+    {
+        float sinTheta = math.sin(angle);
+        float cosTheta = math.cos(angle);
+
+        float newX = vector.x * cosTheta - vector.y * sinTheta;
+        float newY = vector.x * sinTheta + vector.y * cosTheta;
+
+        return new float3(newX, newY, vector.z);
+    }
 }
 
 [StructLayout(LayoutKind.Auto)]
@@ -154,6 +170,9 @@ partial struct ApplyLiftJob : IJobEntity
             Debug.Log(((Quaternion)liftGeneratingSurfaceLocalTransform.InverseTransformRotation(localTransformComponentLookup[entity].Rotation)).eulerAngles);
 
             physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, liftGeneratingSurfaceLocalTransform.Up() * liftGeneratingSurfaceComponent.calculatedLiftForce * deltaTime, liftGeneratingSurfaceLocalTransform.Position);
-        }
+
+            float3 velocity = physicsVelocity.Linear;
+
+            physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, liftGeneratingSurfaceComponent.calculatedLiftForce, liftGeneratingSurfaceComponent.lastLocalPosition);        }
     }
 }

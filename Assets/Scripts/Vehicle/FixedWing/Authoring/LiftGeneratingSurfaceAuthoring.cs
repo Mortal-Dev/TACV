@@ -6,6 +6,8 @@ public class LiftGeneratingSurfaceAuthoring : MonoBehaviour
 {
     public int positionId;
 
+    public float liftArea;
+
     public AoALiftCoefficientPercentageValue[] AoALiftCoefficientPercentageValues;
 
     class Baking : Baker<LiftGeneratingSurfaceAuthoring>
@@ -18,7 +20,7 @@ public class LiftGeneratingSurfaceAuthoring : MonoBehaviour
 
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
 
-            AddComponent(entity, new LiftGeneratingSurfaceComponent() { Id = authoring.positionId, PitchAoALiftCoefficientPercentageCurve = lowFidelityFixedAnimationCurve });
+            AddComponent(entity, new LiftGeneratingSurfaceComponent() { Id = authoring.positionId, liftArea = authoring.liftArea, PitchAoALiftCoefficientPercentageCurve = lowFidelityFixedAnimationCurve });
         }
 
         private AnimationCurve CreateAnimationCurveFromAoALiftCoefficientValues(AoALiftCoefficientPercentageValue[] aoALiftCoefficientPercentageValues)

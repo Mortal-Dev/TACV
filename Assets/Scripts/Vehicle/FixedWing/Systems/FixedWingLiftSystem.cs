@@ -24,19 +24,23 @@ public partial struct FixedWingLiftSystem : ISystem
 
     ComponentLookup<LiftGeneratingSurfaceComponent> liftGeneratingSurfaceComponentLookup;
 
+    ComponentLookup<FixedWingComponent> fixedWingComponentLookup;
+
     public void OnCreate(ref SystemState systemState)
     {
         updateliftNetworkEntityQuery = systemState.GetEntityQuery(ComponentType.ReadWrite<LiftGeneratingSurfaceComponent>(), ComponentType.ReadWrite<LocalTransform>(), ComponentType.ReadOnly<Parent>(),
             ComponentType.ReadOnly<NetworkedEntityChildComponent>());
 
         applyLiftNetworkedEntityQuery = systemState.GetEntityQuery(ComponentType.ReadWrite<PhysicsVelocity>(), ComponentType.ReadOnly<PhysicsMass>(), ComponentType.ReadOnly<FixedWingComponent>(), 
-            ComponentType.ReadOnly<FixedWingLiftComponent>(), ComponentType.ReadOnly<LocalOwnedNetworkedEntityComponent>());
+            ComponentType.ReadOnly<LocalOwnedNetworkedEntityComponent>());
 
         fixedWingLiftComponentLookup = systemState.GetComponentLookup<FixedWingLiftComponent>();
 
         localTransfromComponentLookup = systemState.GetComponentLookup<LocalTransform>();
 
         liftGeneratingSurfaceComponentLookup = systemState.GetComponentLookup<LiftGeneratingSurfaceComponent>();
+
+        fixedWingComponentLookup = systemState.GetComponentLookup<FixedWingComponent>();
     }
 
     [BurstCompile]
@@ -47,9 +51,11 @@ public partial struct FixedWingLiftSystem : ISystem
         fixedWingLiftComponentLookup.Update(ref systemState);
         localTransfromComponentLookup.Update(ref systemState);
         liftGeneratingSurfaceComponentLookup.Update(ref systemState);
+        fixedWingComponentLookup.Update(ref systemState);
 
-        UpdateLiftJob updateLiftJob = new() { deltaTime = SystemAPI.Time.DeltaTime, fixedWingLiftComponentLookup = fixedWingLiftComponentLookup, localTransformComponentLookup = localTransfromComponentLookup };
-        ApplyLiftJob applyLiftJob = new() { deltaTime = SystemAPI.Time.DeltaTime, liftGeneratingSurfaceComponentLookup = liftGeneratingSurfaceComponentLookup };
+        UpdateLiftJob updateLiftJob = new() { deltaTime = SystemAPI.Time.DeltaTime, fixedWingLiftComponentLookup = fixedWingLiftComponentLookup, 
+            localTransformComponentLookup = localTransfromComponentLookup, fixedWingComponentLookup = fixedWingComponentLookup };
+        ApplyLiftJob applyLiftJob = new() { deltaTime = SystemAPI.Time.DeltaTime, liftGeneratingSurfaceComponentLookup = liftGeneratingSurfaceComponentLookup, localTransformComponentLookup = localTransfromComponentLookup };
 
         if (networkManagerEntityComponent.NetworkType == NetworkType.None)
         {
@@ -76,16 +82,20 @@ partial struct UpdateLiftJob : IJobEntity
     
     [ReadOnly] public ComponentLookup<FixedWingLiftComponent> fixedWingLiftComponentLookup;
 
-    public void Execute([ChunkIndexInQuery] int sortKey, ref LiftGeneratingSurfaceComponent liftGeneratingSurfaceComponent, ref LocalTransform localTransform, in Parent parent)
+    [ReadOnly] public ComponentLookup<FixedWingComponent> fixedWingComponentLookup;
+
+    public void Execute(ref LiftGeneratingSurfaceComponent liftGeneratingSurfaceComponent, ref LocalTransform localTransform, in Parent parent)
     {
-        if (!fixedWingLiftComponentLookup.TryGetComponent(parent.Value, out FixedWingLiftComponent fixedWingLiftComponent)) throw new System.Exception("unable to find fixedwinglift component in parent");
-        
-        ProcessPitchLift(ref liftGeneratingSurfaceComponent, ref localTransform, in parent, fixedWingLiftComponent);
+        FixedWingLiftComponent fixedWingLiftComponent = fixedWingLiftComponentLookup[parent.Value];
+
+        FixedWingComponent fixedWingComponent = fixedWingComponentLookup[parent.Value];
+
+        ProcessLift(ref liftGeneratingSurfaceComponent, ref localTransform, in parent, fixedWingLiftComponent, fixedWingComponent);
     }
 
     [BurstCompile]
-    private void ProcessPitchLift(ref LiftGeneratingSurfaceComponent liftGeneratingSurfaceComponent, ref LocalTransform liftGeneratingSurfaceLocalTransform,
-        in Parent parent, FixedWingLiftComponent fixedWingLiftComponent)
+    private void ProcessLift(ref LiftGeneratingSurfaceComponent liftGeneratingSurfaceComponent, ref LocalTransform liftGeneratingSurfaceLocalTransform,
+        in Parent parent, FixedWingLiftComponent fixedWingLiftComponent, FixedWingComponent fixedWingComponent)
     {
         LocalTransform parentTransform = localTransformComponentLookup[parent.Value];
 
@@ -97,15 +107,11 @@ partial struct UpdateLiftJob : IJobEntity
 
         float metersPerSecond = differenceMeters / deltaTime;
 
-        float pitchAngleOfAttack = 0;
+        float liftCoefficient = fixedWingLiftComponent.pitchLiftCurve.Evaluate(fixedWingComponent.angleOfAttack) * liftGeneratingSurfaceComponent.PitchAoALiftCoefficientPercentageCurve.Evaluate(fixedWingComponent.angleOfAttack);
 
-        float pitchLiftCoefficient = fixedWingLiftComponent.pitchLiftCurve.Evaluate(pitchAngleOfAttack) * liftGeneratingSurfaceComponent.PitchAoALiftCoefficientPercentageCurve.Evaluate(pitchAngleOfAttack);
+        float liftForce = 0.5f * AirDensity.GetAirDensityFromMeters(liftGeneratingSurfaceGlobalPosition.y) * (metersPerSecond * metersPerSecond) * liftGeneratingSurfaceComponent.liftArea * liftCoefficient;
 
-        float liftPower = 0.5f * AirDensity.GetAirDensityFromMeters(liftGeneratingSurfaceGlobalPosition.y) * (metersPerSecond * metersPerSecond) * 40 * pitchLiftCoefficient;
-
-        liftGeneratingSurfaceComponent.calculatedLiftForce = Normalize(liftGeneratingSurfaceLocalTransform.Up()) * liftPower;
-
-        liftGeneratingSurfaceComponent.lastLocalPosition = liftGeneratingSurfaceLocalTransform.Position;
+        liftGeneratingSurfaceComponent.calculatedLiftForce = liftForce;
 
         liftGeneratingSurfaceComponent.lastGlobalPosition = liftGeneratingSurfaceGlobalPosition;
     }
@@ -128,17 +134,26 @@ partial struct UpdateLiftJob : IJobEntity
 partial struct ApplyLiftJob : IJobEntity
 {
     [NativeDisableContainerSafetyRestriction]
-    [ReadOnly] public ComponentLookup<LiftGeneratingSurfaceComponent> liftGeneratingSurfaceComponentLookup;
+    [ReadOnly] 
+    public ComponentLookup<LiftGeneratingSurfaceComponent> liftGeneratingSurfaceComponentLookup;
+
+    [NativeDisableContainerSafetyRestriction]
+    [ReadOnly]
+    public ComponentLookup<LocalTransform> localTransformComponentLookup;
 
     [ReadOnly] public float deltaTime;
 
-    public void Execute(Entity entity, ref PhysicsVelocity physicsVelocity, in PhysicsMass physicsMass, in FixedWingComponent fixedWingComponent, in FixedWingLiftComponent fixedWingLiftComponent)
+    public void Execute(Entity entity, ref PhysicsVelocity physicsVelocity, in PhysicsMass physicsMass, in FixedWingComponent fixedWingComponent)
     {
         foreach (Entity liftGeneratingEntity in fixedWingComponent.liftGeneratingSurfaceEntities)
         {
             LiftGeneratingSurfaceComponent liftGeneratingSurfaceComponent = liftGeneratingSurfaceComponentLookup[liftGeneratingEntity];
 
-            physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, liftGeneratingSurfaceComponent.calculatedLiftForce, liftGeneratingSurfaceComponent.lastLocalPosition);
+            LocalTransform liftGeneratingSurfaceLocalTransform = localTransformComponentLookup[liftGeneratingEntity];
+
+            Debug.Log(((Quaternion)liftGeneratingSurfaceLocalTransform.InverseTransformRotation(localTransformComponentLookup[entity].Rotation)).eulerAngles);
+
+            physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, liftGeneratingSurfaceLocalTransform.Up() * liftGeneratingSurfaceComponent.calculatedLiftForce * deltaTime, liftGeneratingSurfaceLocalTransform.Position);
         }
     }
 }

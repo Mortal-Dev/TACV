@@ -16,7 +16,7 @@ public partial struct FixedWingStateSystem : ISystem
     {
         deltaTime = ((FixedStepSimulationSystemGroup)systemState.World.GetExistingSystemManaged(typeof(FixedStepSimulationSystemGroup))).Timestep;
 
-       /* if (NetworkManager.Instance.NetworkType == NetworkType.None)
+        if (NetworkManager.Instance.NetworkType == NetworkType.None)
         {
             foreach (var (fixedWingComponent, localTransform, velocity, physicsMass) in SystemAPI.Query<RefRW<FixedWingComponent>, RefRO<LocalTransform>,
             RefRW<PhysicsVelocity>, RefRW<PhysicsMass>>().WithNone<UninitializedFixedWingComponent>())
@@ -31,7 +31,7 @@ public partial struct FixedWingStateSystem : ISystem
             {
                 UpdateFixedWing(fixedWingComponent, localTransform, velocity, physicsMass, ref systemState);
             }
-        }*/
+        }
     }
 
     private void UpdateFixedWing(RefRW<FixedWingComponent> fixedWingComponent, RefRO<LocalTransform> localTransformComponent, 
@@ -56,15 +56,15 @@ public partial struct FixedWingStateSystem : ISystem
 
     private void SetAngleOfAttack(RefRW<FixedWingComponent> fixedWingComponent)
     {
-        if (((Vector3)fixedWingComponent.ValueRO.localVelocity).sqrMagnitude < 0.1f)
+        if (((Vector3)fixedWingComponent.ValueRO.localVelocity).sqrMagnitude < 0.0001f)
         {
             fixedWingComponent.ValueRW.angleOfAttack = 0;
             fixedWingComponent.ValueRW.angleOfAttackYaw = 0;
             return;
         }
 
-        fixedWingComponent.ValueRW.angleOfAttack = math.atan2(-fixedWingComponent.ValueRO.localVelocity.y, fixedWingComponent.ValueRO.localVelocity.z);
-        fixedWingComponent.ValueRW.angleOfAttackYaw = math.atan2(fixedWingComponent.ValueRO.localVelocity.x, fixedWingComponent.ValueRO.localVelocity.z);
+        fixedWingComponent.ValueRW.angleOfAttack =  math.degrees(math.atan2(-fixedWingComponent.ValueRO.localVelocity.y, fixedWingComponent.ValueRO.localVelocity.z));
+        fixedWingComponent.ValueRW.angleOfAttackYaw = math.degrees(math.atan2(fixedWingComponent.ValueRO.localVelocity.x, fixedWingComponent.ValueRO.localVelocity.z));
     }
     
     private void SetGForce(RefRW<FixedWingComponent> fixedWingComponent, RefRW<PhysicsVelocity> physicsVelocity)

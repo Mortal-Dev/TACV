@@ -63,12 +63,13 @@ public partial struct FixedWingDragSystem : ISystem
         {
             float drag = CalculateDrag(velocity.magnitude, backwardDot, altitudeMeters, fixedWingDragComponent.ValueRO.backArea, fixedWingDragComponent.ValueRO.backDragCoefficientAoACurve);
             physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized * backwardDot);
+            Debug.Log(deltaTime * drag * oppositeVelocityNormalized * backwardDot);
         }
 
         if (rightSideDot > 0 && rightSideDot <= 1)
         {
             float drag = CalculateDrag(velocity.magnitude, rightSideDot, altitudeMeters, fixedWingDragComponent.ValueRO.rightSideArea, fixedWingDragComponent.ValueRO.rightSideDragCoefficientAoACurve);
-            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized * rightSideDot);
+            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO,  drag * rightSideDot * oppositeVelocityNormalized * deltaTime);
         }
         else if (leftSideDot > 0 && leftSideDot <= 1)
         {

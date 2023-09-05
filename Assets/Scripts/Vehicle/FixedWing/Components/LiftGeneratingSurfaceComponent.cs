@@ -1,9 +1,12 @@
 ﻿using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Transforms;
 
 public partial struct LiftGeneratingSurfaceComponent : IComponentData, ComponentId
 {
     public int Id { get; set; }
+
+    public float liftArea;
 
     public LowFidelityFixedAnimationCurve PitchAoALiftCoefficientPercentageCurve;
 
@@ -17,7 +20,5 @@ public partial struct LiftGeneratingSurfaceComponent : IComponentData, Component
 
     public float3 lastGlobalPosition;
 
-    public float3 lastLocalPosition;
-
-    public float3 calculatedLiftForce;
+    public float calculatedLiftForce;
 }

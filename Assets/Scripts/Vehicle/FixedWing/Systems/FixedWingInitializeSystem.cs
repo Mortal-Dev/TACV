@@ -4,6 +4,8 @@ using Unity.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using System.Diagnostics;
+
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 [UpdateBefore(typeof(FixedWingStateSystem))]
@@ -38,6 +40,7 @@ public partial class FixedWingInitializeSystem : SystemBase
         fixedWingComponent.stabilatorEntities = GetEntities<StabilatorComponent>(children);
         fixedWingComponent.airleronEntities = GetEntities<AirleronComponent>(children);
         fixedWingComponent.engineEntities = GetEntities<EngineComponent>(children);
+        fixedWingComponent.liftGeneratingSurfaceEntities = GetEntities<LiftGeneratingSurfaceComponent>(children);
 
         fixedWingComponent.centerOfPressureEntity = GetEntity<CenterOfPressureComponent>(children);
         fixedWingComponent.centerOfGravityEntity = GetEntity<CenterOfGravityComponent>(children);

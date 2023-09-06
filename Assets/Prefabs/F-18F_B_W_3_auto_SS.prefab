@@ -3003,7 +3003,7 @@ MonoBehaviour:
   - angleOfAttack: -90
     dragCoefficient: 2.45
   - angleOfAttack: 0
-    dragCoefficient: 0.295
+    dragCoefficient: 0
   - angleOfAttack: 90
     dragCoefficient: 2.4
 --- !u!114 &8606548056771566246

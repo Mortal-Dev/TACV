@@ -32,7 +32,7 @@ public partial struct FixedWingLiftSystem : ISystem
             ComponentType.ReadOnly<NetworkedEntityChildComponent>());
 
         applyLiftNetworkedEntityQuery = systemState.GetEntityQuery(ComponentType.ReadWrite<PhysicsVelocity>(), ComponentType.ReadOnly<PhysicsMass>(), ComponentType.ReadOnly<FixedWingComponent>(), 
-            ComponentType.ReadOnly<LocalOwnedNetworkedEntityComponent>());
+            ComponentType.ReadOnly<LocalTransform>(), ComponentType.ReadOnly<LocalOwnedNetworkedEntityComponent>());
 
         fixedWingLiftComponentLookup = systemState.GetComponentLookup<FixedWingLiftComponent>();
 
@@ -121,28 +121,6 @@ partial struct UpdateLiftJob : IJobEntity
 
         liftGeneratingSurfaceComponent.lastGlobalPosition = liftGeneratingSurfaceGlobalTransform;
     }
-
-    public static float Magnitude(float3 vector) { return (float)math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z); }
-
-    public static float3 Normalize(float3 value)
-    {
-        float mag = Magnitude(value);
-        if (mag > 0.00001F)
-            return value / mag;
-        else
-            return float3.zero;
-    }
-
-    static float3 RotateVectorAroundZ(float3 vector, float angle)
-    {
-        float sinTheta = math.sin(angle);
-        float cosTheta = math.cos(angle);
-
-        float newX = vector.x * cosTheta - vector.y * sinTheta;
-        float newY = vector.x * sinTheta + vector.y * cosTheta;
-
-        return new float3(newX, newY, vector.z);
-    }
 }
 
 [StructLayout(LayoutKind.Auto)]
@@ -159,7 +137,7 @@ partial struct ApplyLiftJob : IJobEntity
 
     [ReadOnly] public float deltaTime;
 
-    public void Execute(Entity entity, ref PhysicsVelocity physicsVelocity, in PhysicsMass physicsMass, in FixedWingComponent fixedWingComponent)
+    public void Execute(Entity entity, ref PhysicsVelocity physicsVelocity, in PhysicsMass physicsMass, in FixedWingComponent fixedWingComponent, in LocalTransform localTransform)
     {
         foreach (Entity liftGeneratingEntity in fixedWingComponent.liftGeneratingSurfaceEntities)
         {
@@ -167,12 +145,13 @@ partial struct ApplyLiftJob : IJobEntity
 
             LocalTransform liftGeneratingSurfaceLocalTransform = localTransformComponentLookup[liftGeneratingEntity];
 
-            Debug.Log(((Quaternion)liftGeneratingSurfaceLocalTransform.InverseTransformRotation(localTransformComponentLookup[entity].Rotation)).eulerAngles);
+            physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, localTransform.Up() * liftGeneratingSurfaceComponent.calculatedLiftForce * deltaTime, liftGeneratingSurfaceLocalTransform.Position);
+            Debug.Log("global from local velocity rotated: " + ((Vector3)localTransform.TransformDirection(MathHelper.Normalize(RotateVectorAroundX(fixedWingComponent.localVelocity, -90f)))).ToString("F3"));
+        }
+    }
 
-            physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, liftGeneratingSurfaceLocalTransform.Up() * liftGeneratingSurfaceComponent.calculatedLiftForce * deltaTime, liftGeneratingSurfaceLocalTransform.Position);
-
-            float3 velocity = physicsVelocity.Linear;
-
-            physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, liftGeneratingSurfaceComponent.calculatedLiftForce, liftGeneratingSurfaceComponent.lastLocalPosition);        }
+    static float3 RotateVectorAroundX(float3 vector, float degreesToRotate)
+    {
+        return Quaternion.Euler(degreesToRotate, 0, 0) * vector;
     }
 }

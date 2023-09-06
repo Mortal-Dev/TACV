@@ -86,6 +86,8 @@ public partial struct FixedWingEngineSystem : ISystem
 
                 physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, engineLocalTransform.Forward() * 
                     engineComponent.currentPower * deltaTime, engineLocalTransform.Position);
+
+                Debug.Log("speed kts: " + ((Vector3)physicsVelocity.Linear).magnitude * 1.943844f);
             }
         }
     }

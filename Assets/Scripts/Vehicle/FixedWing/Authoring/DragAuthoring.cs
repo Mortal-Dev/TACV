@@ -53,7 +53,7 @@ public class DragAuthoring : MonoBehaviour
 
             foreach (DragCoefficientValue dragCoefficientValue in dragCoefficientInserts)
             {
-                animationCurve.AddKey(dragCoefficientValue.angleOfAttack / maxDragCoefficient.angleOfAttack, dragCoefficientValue.dragCoefficient / maxDragCoefficient.dragCoefficient);
+                animationCurve.AddKey(dragCoefficientValue.angleOfAttack / 180, dragCoefficientValue.dragCoefficient / maxDragCoefficient.dragCoefficient);
             }
 
             return animationCurve;
@@ -64,6 +64,6 @@ public class DragAuthoring : MonoBehaviour
 [Serializable]
 public class DragCoefficientValue
 {
-    public float angleOfAttack;
+    [Range(-90f, 90f)] public float angleOfAttack;
     public float dragCoefficient;
 }

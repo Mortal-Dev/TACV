@@ -18,7 +18,7 @@ public partial struct LiftGeneratingSurfaceComponent : IComponentData, Component
 
     public Entity minCenterOfLiftEntity;
 
-    public LocalTransform lastGlobalPosition;
+    public LocalTransform lastGlobalTransform;
 
     public float3 lastLocalPosition;
 

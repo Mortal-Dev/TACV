@@ -101,9 +101,9 @@ partial struct UpdateLiftJob : IJobEntity
 
         LocalTransform liftGeneratingSurfaceGlobalTransform = liftGeneratingSurfaceLocalTransform.TransformTransform(parentTransform);
 
-        if (liftGeneratingSurfaceComponent.lastGlobalPosition.Position.Equals(float3.zero)) liftGeneratingSurfaceComponent.lastGlobalPosition = liftGeneratingSurfaceGlobalTransform;
+        if (liftGeneratingSurfaceComponent.lastGlobalTransform.Position.Equals(float3.zero)) liftGeneratingSurfaceComponent.lastGlobalTransform = liftGeneratingSurfaceGlobalTransform;
         
-        float differenceMeters = Vector3.Distance(liftGeneratingSurfaceGlobalTransform.Position, liftGeneratingSurfaceComponent.lastGlobalPosition.Position);
+        float differenceMeters = Vector3.Distance(liftGeneratingSurfaceGlobalTransform.Position, liftGeneratingSurfaceComponent.lastGlobalTransform.Position);
 
         float metersPerSecond = differenceMeters / deltaTime;
 
@@ -113,13 +113,11 @@ partial struct UpdateLiftJob : IJobEntity
 
         liftGeneratingSurfaceComponent.calculatedLiftForce = liftForce;
 
-        float liftPower = 0.5f * AirDensity.GetAirDensityFromMeters(liftGeneratingSurfaceGlobalTransform.Position.y) * (metersPerSecond * metersPerSecond) * 40 * liftCoefficient;
-
-        liftGeneratingSurfaceComponent.calculatedLiftForce = liftPower;
-
         liftGeneratingSurfaceComponent.lastLocalPosition = liftGeneratingSurfaceLocalTransform.Position;
 
-        liftGeneratingSurfaceComponent.lastGlobalPosition = liftGeneratingSurfaceGlobalTransform;
+        liftGeneratingSurfaceComponent.lastGlobalTransform = liftGeneratingSurfaceGlobalTransform;
+
+        Debug.Log("lift force: " + liftGeneratingSurfaceComponent.calculatedLiftForce);
     }
 }
 
@@ -137,16 +135,17 @@ partial struct ApplyLiftJob : IJobEntity
 
     [ReadOnly] public float deltaTime;
 
-    public void Execute(Entity entity, ref PhysicsVelocity physicsVelocity, in PhysicsMass physicsMass, in FixedWingComponent fixedWingComponent, in LocalTransform localTransform)
+    public void Execute(ref PhysicsVelocity physicsVelocity, in PhysicsMass physicsMass, in FixedWingComponent fixedWingComponent, in LocalTransform localTransform)
     {
+        Debug.Log("speed kts: " + ((Vector3)physicsVelocity.Linear).magnitude * 1.943844f);
+
         foreach (Entity liftGeneratingEntity in fixedWingComponent.liftGeneratingSurfaceEntities)
         {
             LiftGeneratingSurfaceComponent liftGeneratingSurfaceComponent = liftGeneratingSurfaceComponentLookup[liftGeneratingEntity];
 
             LocalTransform liftGeneratingSurfaceLocalTransform = localTransformComponentLookup[liftGeneratingEntity];
 
-            physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, localTransform.Up() * liftGeneratingSurfaceComponent.calculatedLiftForce * deltaTime, liftGeneratingSurfaceLocalTransform.Position);
-            Debug.Log("global from local velocity rotated: " + ((Vector3)localTransform.TransformDirection(MathHelper.Normalize(RotateVectorAroundX(fixedWingComponent.localVelocity, -90f)))).ToString("F3"));
+            physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, MathHelper.Normalize(localTransform.TransformDirection(Quaternion.Euler(new float3(-90, 0, 0)) * fixedWingComponent.localVelocity)) * liftGeneratingSurfaceComponent.calculatedLiftForce * deltaTime, liftGeneratingSurfaceLocalTransform.Position);
         }
     }
 

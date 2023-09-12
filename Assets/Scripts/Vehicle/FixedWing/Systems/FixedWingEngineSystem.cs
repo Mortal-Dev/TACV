@@ -84,10 +84,10 @@ public partial struct FixedWingEngineSystem : ISystem
 
                 parallelWriterEntityCommandBuffer.SetComponent(sortKey, engineEntity, engineComponent);
 
-                physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, engineLocalTransform.Forward() * 
+                physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, engineLocalTransform.TransformTransform(localTransform).Forward() * 
                     engineComponent.currentPower * deltaTime, engineLocalTransform.Position);
 
-                Debug.Log("speed kts: " + ((Vector3)physicsVelocity.Linear).magnitude * 1.943844f);
+                Debug.Log("engine");
             }
         }
     }

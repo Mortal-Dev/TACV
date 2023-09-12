@@ -6,7 +6,6 @@ using Unity.Entities;
 using Unity.Physics;
 using Unity.Physics.Extensions;
 using Unity.Transforms;
-using UnityEngine;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 [UpdateBefore(typeof(FixedWingStateSystem))]
@@ -86,8 +85,6 @@ public partial struct FixedWingEngineSystem : ISystem
 
                 physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, engineLocalTransform.TransformTransform(localTransform).Forward() * 
                     engineComponent.currentPower * deltaTime, engineLocalTransform.Position);
-
-                Debug.Log("engine");
             }
         }
     }

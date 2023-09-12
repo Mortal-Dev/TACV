@@ -3,4 +3,5 @@
 
 public partial struct CenterOfGravityComponent : IComponentData
 {
+    
 }

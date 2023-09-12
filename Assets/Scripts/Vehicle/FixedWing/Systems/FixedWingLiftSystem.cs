@@ -116,8 +116,6 @@ partial struct UpdateLiftJob : IJobEntity
         liftGeneratingSurfaceComponent.lastLocalPosition = liftGeneratingSurfaceLocalTransform.Position;
 
         liftGeneratingSurfaceComponent.lastGlobalTransform = liftGeneratingSurfaceGlobalTransform;
-
-        Debug.Log("lift force: " + liftGeneratingSurfaceComponent.calculatedLiftForce);
     }
 }
 
@@ -137,8 +135,6 @@ partial struct ApplyLiftJob : IJobEntity
 
     public void Execute(ref PhysicsVelocity physicsVelocity, in PhysicsMass physicsMass, in FixedWingComponent fixedWingComponent, in LocalTransform localTransform)
     {
-        Debug.Log("speed kts: " + ((Vector3)physicsVelocity.Linear).magnitude * 1.943844f);
-
         foreach (Entity liftGeneratingEntity in fixedWingComponent.liftGeneratingSurfaceEntities)
         {
             LiftGeneratingSurfaceComponent liftGeneratingSurfaceComponent = liftGeneratingSurfaceComponentLookup[liftGeneratingEntity];
@@ -147,10 +143,5 @@ partial struct ApplyLiftJob : IJobEntity
 
             physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, MathHelper.Normalize(localTransform.TransformDirection(Quaternion.Euler(new float3(-90, 0, 0)) * fixedWingComponent.localVelocity)) * liftGeneratingSurfaceComponent.calculatedLiftForce * deltaTime, liftGeneratingSurfaceLocalTransform.Position);
         }
-    }
-
-    static float3 RotateVectorAroundX(float3 vector, float degreesToRotate)
-    {
-        return Quaternion.Euler(degreesToRotate, 0, 0) * vector;
     }
 }

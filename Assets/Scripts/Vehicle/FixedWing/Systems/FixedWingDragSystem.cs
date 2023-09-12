@@ -4,9 +4,14 @@ using Unity.Physics;
 using Unity.Physics.Extensions;
 using Unity.Transforms;
 using Unity.Mathematics;
+using Unity.Collections;
+using Unity.Burst;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 [UpdateAfter(typeof(FixedWingStateSystem))]
+[UpdateAfter(typeof(FixedWingLiftSystem))]
+[UpdateAfter(typeof(FixedWingEngineSystem))]
+[BurstCompile]
 public partial struct FixedWingDragSystem : ISystem
 {
     float deltaTime;
@@ -16,89 +21,78 @@ public partial struct FixedWingDragSystem : ISystem
     public void OnCreate(ref SystemState systemState)
     {
         networkEntityQuery = systemState.GetEntityQuery(ComponentType.ReadWrite<FixedWingDragComponent>(), ComponentType.ReadWrite<FixedWingComponent>(), ComponentType.ReadWrite<PhysicsMass>(), 
-            ComponentType.ReadWrite<PhysicsVelocity>(), ComponentType.ReadWrite<LocalTransform>(), ComponentType.ReadOnly<NetworkedEntityComponent>());
+            ComponentType.ReadWrite<PhysicsVelocity>(), ComponentType.ReadOnly<LocalTransform>(), ComponentType.ReadOnly<NetworkedEntityComponent>());
     }
 
+    [BurstCompile]
     public void OnUpdate(ref SystemState systemState)
     {
         deltaTime = SystemAPI.Time.DeltaTime;
 
         if (!SystemAPI.TryGetSingleton(out NetworkManagerEntityComponent networkManagerEntityComponent)) return;
 
+        FixedWingDragJob fixedWingDragJob = new FixedWingDragJob() { deltaTime = SystemAPI.Time.DeltaTime };
+
         if (networkManagerEntityComponent.NetworkType == NetworkType.None)
         {
-            foreach (var (fixedWingDragComponent, fixedWingComponent, physicsMass, physicsVelocity, localTransform) in SystemAPI.Query<RefRW<FixedWingDragComponent>, RefRW<FixedWingComponent>, RefRW<PhysicsMass>, RefRW<PhysicsVelocity>, RefRW<LocalTransform>>().
-                WithNone<UninitializedFixedWingComponent>())
-            {
-                UpdateDrag(fixedWingDragComponent, fixedWingComponent, physicsMass, physicsVelocity, localTransform);
-            }
+            fixedWingDragJob.ScheduleParallel(systemState.Dependency).Complete();
         }
         else
         {
-            foreach (var (fixedWingDragComponent, fixedWingComponent, physicsMass, physicsVelocity, localTransform) in SystemAPI.Query<RefRW<FixedWingDragComponent>, RefRW<FixedWingComponent>, RefRW<PhysicsMass>, RefRW<PhysicsVelocity>, RefRW<LocalTransform>>().
-                WithNone<UninitializedFixedWingComponent>().WithAll<LocalOwnedNetworkedEntityComponent>())
+            fixedWingDragJob.ScheduleParallel(networkEntityQuery, systemState.Dependency).Complete();
+        }
+    }
+    
+    [BurstCompile]
+    partial struct FixedWingDragJob : IJobEntity
+    {
+        [ReadOnly] public float deltaTime;
+
+        public readonly void Execute(ref FixedWingDragComponent fixedWingDragComponent, ref FixedWingComponent fixedWingComponent, ref PhysicsVelocity physicsVelocity, in PhysicsMass physicsMass,
+            in LocalTransform localTransform)
+        {
+            Vector3 globalVelocity = physicsVelocity.Linear;
+
+            float angleOfAttack = fixedWingComponent.angleOfAttack;
+            float yawAngleOfAttack = fixedWingComponent.angleOfAttackYaw;
+
+            float altitudeMeters = localTransform.Position.y;
+
+            Vector3 oppositeVelocityNormalized = (-globalVelocity).normalized;
+
+            if (angleOfAttack >= -90 && angleOfAttack <= 90)
             {
-                UpdateDrag(fixedWingDragComponent, fixedWingComponent, physicsMass, physicsVelocity, localTransform);
+                float drag = CalculateDrag(globalVelocity.magnitude, angleOfAttack, altitudeMeters, fixedWingDragComponent.forwardArea, fixedWingDragComponent.forwardDragCoefficientAoACurve);
+                physicsVelocity.ApplyLinearImpulse(physicsMass, (1 - (math.abs(yawAngleOfAttack) / 90)) * deltaTime * drag * oppositeVelocityNormalized);
+            }
+            else
+            {
+                float drag = CalculateDrag(globalVelocity.magnitude, angleOfAttack, altitudeMeters, fixedWingDragComponent.backArea, fixedWingDragComponent.backDragCoefficientAoACurve);
+                physicsVelocity.ApplyLinearImpulse(physicsMass, (1 - (math.abs(yawAngleOfAttack) / 90)) * deltaTime * drag * oppositeVelocityNormalized);
+            }
+
+            if (yawAngleOfAttack > 1)
+            {
+                float drag = CalculateDrag(globalVelocity.magnitude, yawAngleOfAttack, altitudeMeters, fixedWingDragComponent.rightSideArea, fixedWingDragComponent.rightSideDragCoefficientAoACurve);
+                physicsVelocity.ApplyLinearImpulse(physicsMass, deltaTime * drag * oppositeVelocityNormalized);
+            }
+            else if (yawAngleOfAttack < -1)
+            {
+                float drag = CalculateDrag(globalVelocity.magnitude, yawAngleOfAttack, altitudeMeters, fixedWingDragComponent.leftSideArea, fixedWingDragComponent.leftSideDragCoefficientAoACurve);
+                physicsVelocity.ApplyLinearImpulse(physicsMass, deltaTime * drag * oppositeVelocityNormalized);
             }
         }
-    }
 
-    private void UpdateDrag(RefRW<FixedWingDragComponent> fixedWingDragComponent, RefRW<FixedWingComponent> fixedWingComponent, RefRW<PhysicsMass> phyiscsMassComponent, 
-        RefRW<PhysicsVelocity> physicsVelocity, RefRW<LocalTransform> localTransformComponent)
-    {
-        Vector3 globalVelocity = physicsVelocity.ValueRO.Linear;
-
-        float angleOfAttack = fixedWingComponent.ValueRO.angleOfAttack;
-        float yawAngleOfAttack = fixedWingComponent.ValueRO.angleOfAttackYaw;
-
-        float altitudeMeters = localTransformComponent.ValueRO.Position.y;
-
-        Vector3 oppositeVelocityNormalized = (-globalVelocity).normalized;
-
-        if (angleOfAttack >= -90 && angleOfAttack <= 90)
+        [BurstCompile]
+        private readonly float CalculateDrag(float velocity, float angleOfAttack, float altitudeMeters, float area, LowFidelityFixedAnimationCurve dragCurve)
         {
-            float drag = CalculateDrag(globalVelocity.magnitude, angleOfAttack, altitudeMeters, fixedWingDragComponent.ValueRO.forwardArea, fixedWingDragComponent.ValueRO.forwardDragCoefficientAoACurve);
-            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized * (1 - (math.abs(yawAngleOfAttack) / 90)));
-            Vector3 test = deltaTime * drag * oppositeVelocityNormalized;
-            Debug.Log("front drag: " + test.magnitude);
+            float airDensity = AirDensity.GetAirDensityFromMeters(altitudeMeters);
+
+            float dragCoefficient = dragCurve.Evaluate(angleOfAttack / 180);
+
+            float drag = dragCoefficient * airDensity * (velocity * velocity / 2f) * area;
+
+            return drag;
         }
-        else
-        {
-            float drag = CalculateDrag(globalVelocity.magnitude, angleOfAttack, altitudeMeters, fixedWingDragComponent.ValueRO.backArea, fixedWingDragComponent.ValueRO.backDragCoefficientAoACurve);
-            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, deltaTime * drag * oppositeVelocityNormalized * (1 - (math.abs(yawAngleOfAttack) / 90)));
-            Vector3 test = deltaTime * drag * oppositeVelocityNormalized;
-            Debug.Log("back drag: " + test.magnitude);
-        }
-
-        if (yawAngleOfAttack > 1)
-        {
-            float drag = CalculateDrag(globalVelocity.magnitude, yawAngleOfAttack, altitudeMeters, fixedWingDragComponent.ValueRO.rightSideArea, fixedWingDragComponent.ValueRO.rightSideDragCoefficientAoACurve);
-            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, drag * oppositeVelocityNormalized * deltaTime);
-            Vector3 test = drag * oppositeVelocityNormalized * deltaTime;
-            Debug.Log("right side drag: " + test.magnitude);
-        }
-        else if (yawAngleOfAttack < -1)
-        {
-            float drag = CalculateDrag(globalVelocity.magnitude, yawAngleOfAttack, altitudeMeters, fixedWingDragComponent.ValueRO.leftSideArea, fixedWingDragComponent.ValueRO.leftSideDragCoefficientAoACurve);
-            physicsVelocity.ValueRW.ApplyLinearImpulse(phyiscsMassComponent.ValueRO, drag * oppositeVelocityNormalized * deltaTime);
-            Vector3 test = drag * oppositeVelocityNormalized * deltaTime;
-            Debug.Log("left side drag: " + test.magnitude);
-        }
-       
-    }
-
-    private float CalculateDrag(float velocity, float angleOfAttack, float altitudeMeters, float area, LowFidelityFixedAnimationCurve dragCurve)
-    {
-        float airDensity = AirDensity.GetAirDensityFromMeters(altitudeMeters);
-
-        Debug.Log("angle of attack: " + angleOfAttack);
-
-        float dragCoefficient = dragCurve.Evaluate(angleOfAttack / 180);
-
-        Debug.Log("drag coefficient: " + dragCoefficient);
-
-        float drag = dragCoefficient * airDensity * (velocity * velocity / 2f) * area;
-
-        return drag;
     }
 }

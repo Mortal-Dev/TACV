@@ -1,10 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Unity.Entities;
+using Unity.Transforms;
 
-
-internal class ControlSurfaceSystem
+public partial struct ControlSurfaceSystem : ISystem
 {
+    public EntityQuery networkedEntityQuery;
+
+    public void OnCreate(ref SystemState systemState)
+    {
+        networkedEntityQuery = systemState.GetEntityQuery(ComponentType.ReadOnly<LocalOwnedNetworkedEntityComponent>());
+
+
+    }
+
+    public void OnUpdate(ref SystemState systemState)
+    {
+        if (!SystemAPI.TryGetSingleton(out NetworkManagerEntityComponent networkManagerEntityComponent)) return;
+
+
+    }
+
+
+    public partial struct ControlSurfaceJob : IJobEntity
+    {
+        public void Execute(in FixedWingComponent fixedWingComponent)
+        {
+            
+        }
+    }
+
 }

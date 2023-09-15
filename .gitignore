@@ -40,3 +40,8 @@ Icon?
 ehthumbs.db
 Thumbs.db
 *.log
+*.log
+*.log
+Logs/AssetImportWorker0-prev.log
+*.vsidx
+*.vsidx

@@ -9,8 +9,6 @@ using Unity.Burst;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 [UpdateAfter(typeof(FixedWingStateSystem))]
-[UpdateAfter(typeof(FixedWingLiftSystem))]
-[UpdateAfter(typeof(FixedWingEngineSystem))]
 [BurstCompile]
 public partial struct FixedWingDragSystem : ISystem
 {

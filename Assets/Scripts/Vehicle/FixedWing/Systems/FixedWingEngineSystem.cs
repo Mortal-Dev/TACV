@@ -71,7 +71,7 @@ public partial struct FixedWingEngineSystem : ISystem
 
         public EntityCommandBuffer.ParallelWriter parallelWriterEntityCommandBuffer;
 
-        public void Execute([ChunkIndexInQuery] int sortKey, ref FixedWingComponent fixedWingComponent, ref PhysicsMass physicsMass, ref PhysicsVelocity physicsVelocity, in LocalTransform localTransform)
+        public void Execute([ChunkIndexInQuery] int sortKey, ref FixedWingComponent fixedWingComponent, ref PhysicsMass physicsMass, ref PhysicsVelocity physicsVelocity, in FixedWingInputComponent fixedWingInputComponent, in LocalTransform localTransform)
         {
             foreach (Entity engineEntity in fixedWingComponent.engineEntities)
             {
@@ -79,7 +79,7 @@ public partial struct FixedWingEngineSystem : ISystem
 
                 LocalTransform engineLocalTransform = localTransformLookup[engineEntity];
 
-                engineComponent.currentPower = engineComponent.maxAfterBurnerPowerNewtons * fixedWingComponent.throttle;
+                engineComponent.currentPower = engineComponent.maxAfterBurnerPowerNewtons * fixedWingInputComponent.throttle;
 
                 parallelWriterEntityCommandBuffer.SetComponent(sortKey, engineEntity, engineComponent);
 

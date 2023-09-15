@@ -13,7 +13,8 @@ public class FixedWingAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
 
-            AddComponent(entity, new FixedWingComponent() { throttle = 1 });
+            AddComponent(entity, new FixedWingComponent());
+            AddComponent(entity, new FixedWingInputComponent() { throttle = 1f });
             AddComponent(entity, new UninitializedFixedWingComponent());
         }
     }

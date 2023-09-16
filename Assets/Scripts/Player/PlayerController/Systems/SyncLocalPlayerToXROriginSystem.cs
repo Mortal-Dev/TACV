@@ -70,6 +70,12 @@ public partial class SyncLocalPlayerToXROriginSystem : SystemBase
 
         XROrigin xrOrigin = Object.FindFirstObjectByType<XROrigin>();
 
+        if (xrOrigin == null)
+        {
+            Debug.Log("unable to find xr origin");
+            return;
+        }
+
         XROriginGameObject = xrOrigin.gameObject;
 
         GameObject cameraOffset = xrOrigin.gameObject.GetNamedChild("Camera Offset");

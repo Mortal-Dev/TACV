@@ -3,4 +3,6 @@
 public partial struct NetworkManagerEntityComponent : IComponentData
 {
     public NetworkType NetworkType;
+
+    public ushort localNetworkId;
 }

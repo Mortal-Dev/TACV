@@ -3626,6 +3626,7 @@ GameObject:
   - component: {fileID: 4054618342487889659}
   - component: {fileID: 7375690793736931859}
   - component: {fileID: 8606548056771566246}
+  - component: {fileID: 2785148490618091413}
   m_Layer: 0
   m_Name: F-18F_B_W_3_auto_SS
   m_TagString: Untagged
@@ -3890,6 +3891,19 @@ MonoBehaviour:
     liftCoefficient: 0.15
   - angleOfAttack: 90
     liftCoefficient: 0
+--- !u!114 &2785148490618091413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4994294940979563189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2055cbc6bddd0ba43ae4e04f02472399, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  OriginalNetworkedPrefab: {fileID: 4994294940979563189}
 --- !u!1 &5042091126842104434
 GameObject:
   m_ObjectHideFlags: 0

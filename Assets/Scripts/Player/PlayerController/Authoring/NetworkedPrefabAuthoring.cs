@@ -5,13 +5,13 @@ using UnityEngine;
 
 public class NetworkedPrefabAuthoring : MonoBehaviour
 {
+    public GameObject prefab;
+
     class Baking : Baker<NetworkedPrefabAuthoring>
     {
         public override void Bake(NetworkedPrefabAuthoring authoring)
         {
-            SpawnerAuthoringBase spawnerAuthoringBase = authoring.gameObject.GetComponent<SpawnerAuthoringBase>();
-
-            AddComponent(GetEntity(TransformUsageFlags.Dynamic), new NetworkedPrefabComponent() { prefab = GetEntity(spawnerAuthoringBase.prefab, TransformUsageFlags.Dynamic) });
+            AddComponent(GetEntity(TransformUsageFlags.Dynamic), new NetworkedPrefabComponent() { prefab = GetEntity(authoring.prefab, TransformUsageFlags.Dynamic) });
         }
     }
 }

@@ -9,5 +9,8 @@ public enum OwnershipType
 
 public partial struct LocalPlayerInVehicleComponent : IComponentData
 {
-    public OwnershipType ownerShiptType;
+    public OwnershipType ownershipType;
+
+    // -1 means no-one is holding the throttle/stick and anyone can use it
+    public int currentOwnerId;
 }

@@ -8,11 +8,13 @@ public partial struct NetorkedManagerEntityControllerSystem : ISystem
         if (SystemAPI.TryGetSingleton(out NetworkManagerEntityComponent networkManagerEntityComponent))
         {
             networkManagerEntityComponent.NetworkType = NetworkManager.Instance.NetworkType;
-        }
+            networkManagerEntityComponent.localNetworkId = (NetworkManager.Instance.NetworkType == NetworkType.Server) ? NetworkManager.CLIENT_NET_ID : NetworkManager.SERVER_NET_ID;
+    }
         else
         {
             Entity networkManagerEntity = systemState.EntityManager.CreateEntity();
-            systemState.EntityManager.AddComponentData(networkManagerEntity, new NetworkManagerEntityComponent() { NetworkType = NetworkManager.Instance.NetworkType });
+            systemState.EntityManager.AddComponentData(networkManagerEntity, new NetworkManagerEntityComponent() { NetworkType = NetworkManager.Instance.NetworkType, 
+                localNetworkId = (NetworkManager.Instance.NetworkType == NetworkType.Server) ? NetworkManager.CLIENT_NET_ID : NetworkManager.SERVER_NET_ID });
         }
     }
 }

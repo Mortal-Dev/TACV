@@ -2,6 +2,7 @@
 {
     ClientSyncOwnedEntities,
     ClientFinishedLoadingScene,
+    ClientRequestVehicleOwnership,
     ServerSyncEntity,
     ServerLoadScene,
     ServerSpawnEntity,

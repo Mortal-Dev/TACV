@@ -2,11 +2,11 @@
 
 public static class MathHelper
 {
-    public static float Magnitude(float3 vector) { return (float)math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z); }
+    public static float Magnitude(this float3 value) { return (float)math.sqrt(value.x * value.x + value.y * value.y + value.z * value.z); }
 
-    public static float3 Normalize(float3 value)
+    public static float3 Normalize(this float3 value)
     {
-        float mag = Magnitude(value);
+        float mag = value.Magnitude();
         if (mag > 0.00001F)
             return value / mag;
         else

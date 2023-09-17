@@ -141,7 +141,7 @@ partial struct ApplyLiftJob : IJobEntity
 
             LocalTransform liftGeneratingSurfaceLocalTransform = localTransformComponentLookup[liftGeneratingEntity];
 
-            physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, MathHelper.Normalize(localTransform.TransformDirection(Quaternion.Euler(new float3(-90, 0, 0)) * fixedWingComponent.localVelocity)) * liftGeneratingSurfaceComponent.calculatedLiftForce * deltaTime, liftGeneratingSurfaceLocalTransform.Position);
+            physicsVelocity.ApplyImpulse(physicsMass, physicsMass.Transform.pos, physicsMass.Transform.rot, localTransform.TransformDirection(Quaternion.Euler(new float3(-90, 0, 0)) * fixedWingComponent.localVelocity).Normalize() * liftGeneratingSurfaceComponent.calculatedLiftForce * deltaTime, liftGeneratingSurfaceLocalTransform.Position);
         }
     }
 }

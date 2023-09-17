@@ -2,7 +2,7 @@
 
 partial struct SeatComponent : IComponentData
 {
-    public int id;
+    public int seatPosition;
 
     public bool isOccupied;
 

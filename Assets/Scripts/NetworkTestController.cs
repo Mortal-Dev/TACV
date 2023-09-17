@@ -7,7 +7,7 @@ public class NetworkTestController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        StartCoroutine(DelayServerStart());
+        StartCoroutine(DelayHostStart());
     }
 
     // Update is called once per frame
@@ -16,9 +16,9 @@ public class NetworkTestController : MonoBehaviour
         
     }
 
-    private IEnumerator DelayServerStart()
+    private IEnumerator DelayHostStart()
     {
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(1f);
 
         NetworkManager.Instance.StartHost(696, 1, "Main");
        // NetworkManager.Instance.NetworkSceneManager.LoadScene("Game");

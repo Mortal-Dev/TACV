@@ -16,10 +16,9 @@ public class NetworkedEntityChildAuthoring : MonoBehaviour
 
             NetworkedEntityChildComponent component = new NetworkedEntityChildComponent() { Id = random.Next(int.MinValue, int.MaxValue) };
 
-            //impossible for id to be set to zero again, so we re roll if it is set, 0 is an id later used to identity the parent entity in the network sync message
             if (component.Id == 0) component.Id = random.Next(int.MinValue, int.MaxValue);
 
-            AddComponent(entity, new NetworkedEntityChildComponent() { Id =  random.Next(int.MinValue, int.MaxValue) } );
+            AddComponent(entity, component);
             AddComponent(entity, new PreviousLocalTransformRecordComponent() { localTransformRecord = new LocalTransform() { Position = authoring.transform.localPosition, Rotation = authoring.transform.localRotation, Scale = authoring.transform.localScale.y } });
         }
     }

@@ -11,11 +11,9 @@ public partial struct FixedWingInputSystem : ISystem
     {
         if (!SystemAPI.TryGetSingleton(out PlayerControllerInputComponent playerControllerInputComponent)) return;
 
-        foreach (var (fixedWingInputComponent, localPlayerInVehicleComponent, vehicleComponent, vehicleNetworkedEntityComponent) in SystemAPI.Query<RefRW<FixedWingInputComponent>, 
-            RefRO<LocalPlayerInVehicleComponent>, RefRO<VehicleComponent>, RefRO<NetworkedEntityComponent>>())
+        foreach (var (fixedWingInputComponent, localPlayerInVehicleComponent, vehicleNetworkedEntityComponent) in SystemAPI.Query<RefRW<FixedWingInputComponent>, RefRO<LocalPlayerInVehicleComponent>, 
+            RefRO<NetworkedEntityComponent>>())
         {
-            return;
-
             switch (localPlayerInVehicleComponent.ValueRO.ownershipType)
             {
                 case OwnershipType.Owned:
@@ -36,7 +34,7 @@ public partial struct FixedWingInputSystem : ISystem
     }
 
     [MessageHandler((ushort)NetworkMessageId.ClientRequestVehicleOwnership)]
-    public static void SendVehicleOwnerUpdateRecieved(ushort clientId, Message message)
+    public static void OwnerRequestChangeRecieved(ushort clientId, Message message)
     {
         ulong vehicleNetworkId = message.GetULong();
 

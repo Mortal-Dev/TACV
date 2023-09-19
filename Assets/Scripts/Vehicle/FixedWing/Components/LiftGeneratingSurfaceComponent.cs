@@ -21,6 +21,4 @@ public partial struct LiftGeneratingSurfaceComponent : IComponentData, Component
     public LocalTransform lastGlobalTransform;
 
     public float3 lastLocalPosition;
-
-    public float calculatedLiftForce;
 }

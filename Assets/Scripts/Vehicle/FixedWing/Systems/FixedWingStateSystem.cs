@@ -18,24 +18,24 @@ public partial struct FixedWingStateSystem : ISystem
 
         if (NetworkManager.Instance.NetworkType == NetworkType.None)
         {
-            foreach (var (fixedWingComponent, localTransform, velocity, physicsMass) in SystemAPI.Query<RefRW<FixedWingComponent>, RefRO<LocalTransform>,
-            RefRW<PhysicsVelocity>, RefRW<PhysicsMass>>().WithNone<UninitializedFixedWingComponent>())
+            foreach (var (fixedWingComponent, localTransform, velocity) in SystemAPI.Query<RefRW<FixedWingComponent>, RefRO<LocalTransform>,
+            RefRW<PhysicsVelocity>>().WithNone<UninitializedFixedWingComponent>())
             {
-                UpdateFixedWing(fixedWingComponent, localTransform, velocity, physicsMass, ref systemState);
+                UpdateFixedWing(fixedWingComponent, localTransform, velocity, ref systemState);
             }
         }
         else
         {
-            foreach (var (fixedWingComponent, localTransform, velocity, physicsMass) in SystemAPI.Query<RefRW<FixedWingComponent>, RefRO<LocalTransform>,
-            RefRW<PhysicsVelocity>, RefRW<PhysicsMass>>().WithNone<UninitializedFixedWingComponent>().WithAll<LocalOwnedNetworkedEntityComponent>())
+            foreach (var (fixedWingComponent, localTransform, velocity) in SystemAPI.Query<RefRW<FixedWingComponent>, RefRO<LocalTransform>,
+            RefRW<PhysicsVelocity>>().WithNone<UninitializedFixedWingComponent>().WithAll<LocalOwnedNetworkedEntityComponent>())
             {
-                UpdateFixedWing(fixedWingComponent, localTransform, velocity, physicsMass, ref systemState);
+                UpdateFixedWing(fixedWingComponent, localTransform, velocity, ref systemState);
             }
         }
     }
 
     private void UpdateFixedWing(RefRW<FixedWingComponent> fixedWingComponent, RefRO<LocalTransform> localTransformComponent, 
-        RefRW<PhysicsVelocity> physicsVelocityComponent, RefRW<PhysicsMass> physicsMassComponent, ref SystemState systemState)
+        RefRW<PhysicsVelocity> physicsVelocityComponent, ref SystemState systemState)
     {
         inverseRotation = Quaternion.Inverse(localTransformComponent.ValueRO.Rotation);
 

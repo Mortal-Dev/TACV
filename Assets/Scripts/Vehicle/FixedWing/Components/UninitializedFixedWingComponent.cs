@@ -1,4 +1,4 @@
-﻿using Unity.Entities;
+﻿  using Unity.Entities;
 
 public partial struct UninitializedFixedWingComponent : IComponentData
 {

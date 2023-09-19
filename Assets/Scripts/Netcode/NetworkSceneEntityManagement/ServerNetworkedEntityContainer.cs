@@ -36,6 +36,8 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
 
         if (GetNetworkedPrefab(networkedEntityComponent.networkedPrefabHash) == Entity.Null) throw new Exception($"unable to find entity hash for unactivated entity with index: " + entity.Index);
 
+        if (networkedEntityComponent.connectionId == NetworkManager.SERVER_NET_ID) serverEntityManager.AddComponent(entity, ComponentType.ReadWrite<LocalOwnedNetworkedEntityComponent>());
+
         ulong id = networkIdGenerator.GenerateId();
 
         networkedEntityComponent.networkEntityId = id;
@@ -58,6 +60,8 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
         Entity entity = serverEntityManager.Instantiate(networkedPrefabEntity);
 
         ulong id = networkIdGenerator.GenerateId();
+
+        if (connectionOwnerId == NetworkManager.SERVER_NET_ID) serverEntityManager.AddComponent(entity, ComponentType.ReadWrite<LocalOwnedNetworkedEntityComponent>());
 
         serverEntityManager.SetComponentData(entity, new NetworkedEntityComponent() { connectionId = connectionOwnerId, networkEntityId = id, networkedPrefabHash = networkedPrefabHash });
 

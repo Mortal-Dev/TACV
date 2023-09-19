@@ -25,9 +25,6 @@ public partial class FixedWingInitializeSystem : SystemBase
             SetFixedWingEntities(ref fixedWingComponent, children);
 
             SetLiftEntities(children);
-
-
-
         }).WithoutBurst().Run();
 
         entityCommandBuffer.Playback(EntityManager);

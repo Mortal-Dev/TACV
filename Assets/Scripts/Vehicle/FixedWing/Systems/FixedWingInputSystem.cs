@@ -21,14 +21,14 @@ public partial struct FixedWingInputSystem : ISystem
                     fixedWingInputComponent.ValueRW.throttle = 1f;
                     break;
 
-                case OwnershipType.Shared:
+               /* case OwnershipType.Shared:
                     if (localPlayerInVehicleComponent.ValueRO.currentOwnerId == -1)
                     {
                         Message message = Message.Create(MessageSendMode.Reliable, NetworkMessageId.ClientRequestVehicleOwnership);
                         message.Add(vehicleNetworkedEntityComponent.ValueRO.networkEntityId);
                         NetworkManager.Instance.Network.SendMessage(message, SendMode.Client);
                     }
-                    break;
+                    break;*/
             }
         }
     }

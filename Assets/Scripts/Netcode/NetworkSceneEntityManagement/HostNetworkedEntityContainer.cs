@@ -35,6 +35,8 @@ public class HostNetworkedEntityContainer : NetworkedEntityContainer
 
         ulong networkId = networkIdGenerator.GenerateId();
 
+        if (connectionOwnerId == NetworkManager.SERVER_NET_ID || connectionOwnerId == NetworkManager.CLIENT_NET_ID) hostEntityManager.AddComponent(entity, ComponentType.ReadWrite<LocalOwnedNetworkedEntityComponent>());
+
         hostEntityManager.SetComponentData(entity, new NetworkedEntityComponent() { connectionId = connectionOwnerId, networkEntityId = networkId, networkedPrefabHash = networkedPrefabHash });
 
         networkedEntities.Add(networkId, entity);
@@ -49,6 +51,8 @@ public class HostNetworkedEntityContainer : NetworkedEntityContainer
         NetworkedEntityComponent networkedEntityComponent = hostEntityManager.GetComponentData<NetworkedEntityComponent>(entity);
 
         if (GetNetworkedPrefab(networkedEntityComponent.networkedPrefabHash) == Entity.Null) throw new Exception($"unable to find entity hash for unactivated entity with index: " + entity.Index);
+
+        if (networkedEntityComponent.connectionId == NetworkManager.SERVER_NET_ID || networkedEntityComponent.connectionId == NetworkManager.CLIENT_NET_ID) hostEntityManager.AddComponent(entity, ComponentType.ReadWrite<LocalOwnedNetworkedEntityComponent>());
 
         ulong networkId = networkIdGenerator.GenerateId();
 

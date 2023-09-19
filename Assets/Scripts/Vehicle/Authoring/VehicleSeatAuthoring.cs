@@ -13,7 +13,7 @@ public class VehicleSeatAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
 
-            AddComponent(entity, new SeatComponent() { hasOwnershipCapability = authoring.hasOwnershipCapability, seatPosition = authoring.seatPosition });
+            AddComponent(entity, new VehicleSeatComponent() { hasOwnershipCapability = authoring.hasOwnershipCapability, seatPosition = authoring.seatPosition });
         }
     }
 }

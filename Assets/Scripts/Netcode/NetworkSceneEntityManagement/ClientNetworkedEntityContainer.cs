@@ -35,7 +35,7 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
 
         clientEntityManager.SetComponentData(spawnedNetworkedEntity, new NetworkedEntityComponent() { networkEntityId = networkEntityId, connectionId = connectionOwnerId, networkedPrefabHash = networkedPrefabHash });
 
-        if (networkEntityId == NetworkManager.CLIENT_NET_ID) clientEntityManager.AddComponent(spawnedNetworkedEntity, ComponentType.ReadWrite(typeof(LocalOwnedNetworkedEntityComponent)));
+        if (connectionOwnerId == NetworkManager.CLIENT_NET_ID) clientEntityManager.AddComponent(spawnedNetworkedEntity, ComponentType.ReadWrite(typeof(LocalOwnedNetworkedEntityComponent)));
         
         networkedEntities.Add(networkEntityId, spawnedNetworkedEntity);
 

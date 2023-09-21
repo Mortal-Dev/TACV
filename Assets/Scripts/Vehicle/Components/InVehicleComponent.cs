@@ -7,7 +7,7 @@ public enum OwnershipType
     NotOwned
 }
 
-public partial struct LocalPlayerInVehicleComponent : IComponentData
+public partial struct InVehicleComponent : IComponentData
 {
     public OwnershipType ownershipType;
 

@@ -14,17 +14,12 @@ using Unity.Collections.LowLevel.Unsafe;
 [BurstCompile]
 public partial struct FixedWingLiftSystem : ISystem
 {
-    EntityQuery applyLiftNetworkedEntityQuery;
-
     ComponentLookup<LocalTransform> localTransfromComponentLookup;
 
     ComponentLookup<LiftGeneratingSurfaceComponent> liftGeneratingSurfaceComponentLookup;
 
     public void OnCreate(ref SystemState systemState)
     {
-        applyLiftNetworkedEntityQuery = systemState.GetEntityQuery(ComponentType.ReadWrite<PhysicsVelocity>(), ComponentType.ReadOnly<PhysicsMass>(), ComponentType.ReadOnly<FixedWingComponent>(),
-            ComponentType.ReadOnly<LocalTransform>(), ComponentType.ReadOnly<LocalOwnedNetworkedEntityComponent>());
-
         localTransfromComponentLookup = systemState.GetComponentLookup<LocalTransform>();
 
         liftGeneratingSurfaceComponentLookup = systemState.GetComponentLookup<LiftGeneratingSurfaceComponent>();

@@ -21,6 +21,5 @@ public class NetworkTestController : MonoBehaviour
         yield return new WaitForSeconds(1f);
 
         NetworkManager.Instance.StartHost(696, 1, "Main");
-       // NetworkManager.Instance.NetworkSceneManager.LoadScene("Game");
     }
 }

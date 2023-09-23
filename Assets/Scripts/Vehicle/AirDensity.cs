@@ -4,7 +4,7 @@ using Unity.Collections;
 using System.Linq;
 using UnityEngine;
 
-public partial struct AirDensity
+public readonly partial struct AirDensity
 {
     private static readonly FixedList512Bytes<float> altitudes = new FixedList512Bytes<float>()
     {

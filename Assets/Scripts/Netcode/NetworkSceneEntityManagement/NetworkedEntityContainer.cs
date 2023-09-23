@@ -80,8 +80,6 @@ public abstract class NetworkedEntityContainer
         {
             NetworkedEntityComponent networkedEntityComponent = entityManager.GetComponentData<NetworkedEntityComponent>(networkedPrefabComponent.prefab);
 
-            UnityEngine.Debug.Log($"networked entity component hash: {networkedEntityComponent.networkedPrefabHash}");
-
             if (networkedEntityComponent.networkedPrefabHash == networkedPrefabHash) return networkedPrefabComponent.prefab;
         }
 

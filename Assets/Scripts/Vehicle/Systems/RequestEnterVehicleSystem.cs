@@ -55,6 +55,8 @@ public partial struct RequestEnterVehicleSystem : ISystem
 
         entityManager.SetComponentData(seatEntity, vehicleSeatComponent);
 
+        entityManager.AddComponentData(playerEntity, new InVehicleComponent() { seat = seatEntity, vehicle = vehicleEntity });
+
         Message confirmClientVehicleEnterRequest = Message.Create(MessageSendMode.Reliable, NetworkMessageId.ServerConfirmClientVehicleEnterRequest).Add(clientId).Add(vehicleNetworkId).Add(seatPosition);
 
         NetworkManager.Instance.Network.SendMessage(confirmClientVehicleEnterRequest, SendMode.Server);
@@ -80,6 +82,8 @@ public partial struct RequestEnterVehicleSystem : ISystem
         if (clientIdEnteringVehicle == NetworkManager.CLIENT_NET_ID) entityManager.AddComponentData(playerEntity, new FakeChildComponent() { parent = seatEntity });
 
         VehicleSeatComponent vehicleSeatComponent = entityManager.GetComponentData<VehicleSeatComponent>(vehicleEntity);
+
+        if (NetworkManager.Instance.NetworkType != NetworkType.Host) entityManager.AddComponentData(playerEntity, new InVehicleComponent() { seat = seatEntity, vehicle = vehicleEntity });
 
         vehicleSeatComponent.occupiedBy = playerEntity;
     }

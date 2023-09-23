@@ -13,4 +13,8 @@ public partial struct InVehicleComponent : IComponentData
 
     // -1 means no-one is holding the throttle/stick and anyone can use it
     public int currentOwnerId;
+
+    public Entity seat;
+
+    public Entity vehicle;
 }

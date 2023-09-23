@@ -2,6 +2,6 @@
 
 public partial struct RequestVehicleEnterComponent : IComponentData
 {
-    public int vehicleNetworkId;
+    public ulong vehicleNetworkId;
     public int seat;
 }

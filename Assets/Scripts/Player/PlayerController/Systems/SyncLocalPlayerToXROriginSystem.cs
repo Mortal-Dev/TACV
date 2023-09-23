@@ -66,13 +66,10 @@ public partial class SyncLocalPlayerToXROriginSystem : SystemBase
 
     private void SetXRGameObjects()
     {
-        Debug.Log("setting VR objects");
-
         XROrigin xrOrigin = Object.FindFirstObjectByType<XROrigin>();
 
         if (xrOrigin == null)
         {
-            Debug.Log("unable to find xr origin");
             return;
         }
 

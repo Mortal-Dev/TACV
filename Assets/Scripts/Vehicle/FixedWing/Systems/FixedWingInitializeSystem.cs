@@ -9,7 +9,7 @@ using System.Diagnostics;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 [UpdateBefore(typeof(FixedWingStateSystem))]
-[UpdateAfter(typeof(VehicleComponent))]
+[UpdateAfter(typeof(VehicleSeatInitializeSystem))]
 public partial class FixedWingInitializeSystem : SystemBase
 {
     protected override void OnUpdate()

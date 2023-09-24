@@ -4,7 +4,7 @@ using Unity.Collections;
 using Unity.Entities;
 using System.Linq;
 using System;
-using System.Runtime.CompilerServices;
+using Unity.Physics;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 public partial struct RequestEnterVehicleSystem : ISystem
@@ -47,6 +47,12 @@ public partial struct RequestEnterVehicleSystem : ISystem
 
         Entity seatEntity = Array.Find(vehicleComponent.seats.ToArray(), x => entityManager.GetComponentData<VehicleSeatComponent>(x).seatPosition == seatPosition);
 
+        if (seatEntity == Entity.Null)
+        {
+            UnityEngine.Debug.Log($"unable to find seat {seatPosition} in client seat request");
+            return;
+        }
+
         VehicleSeatComponent vehicleSeatComponent = entityManager.GetComponentData<VehicleSeatComponent>(seatEntity);
 
         if (vehicleSeatComponent.isOccupied) return;
@@ -81,7 +87,15 @@ public partial struct RequestEnterVehicleSystem : ISystem
 
         if (clientIdEnteringVehicle == NetworkManager.CLIENT_NET_ID) entityManager.AddComponentData(playerEntity, new FakeChildComponent() { parent = seatEntity });
 
-        VehicleSeatComponent vehicleSeatComponent = entityManager.GetComponentData<VehicleSeatComponent>(vehicleEntity);
+        VehicleSeatComponent vehicleSeatComponent = entityManager.GetComponentData<VehicleSeatComponent>(vehicleComponent.seats[seatPosition]);
+
+        ComponentStorage.AddComponentToStorage(playerEntity, entityManager.GetComponentData<PhysicsVelocity>(playerEntity));
+
+        entityManager.RemoveComponent<PhysicsVelocity>(playerEntity);
+        entityManager.RemoveComponent<PhysicsCollider>(playerEntity);
+        entityManager.RemoveComponent<PhysicsDamping>(playerEntity);
+        entityManager.RemoveComponent<PhysicsMass>(playerEntity);
+        entityManager.RemoveComponent<PhysicsWorldIndex>(playerEntity);
 
         if (NetworkManager.Instance.NetworkType != NetworkType.Host) entityManager.AddComponentData(playerEntity, new InVehicleComponent() { seat = seatEntity, vehicle = vehicleEntity });
 

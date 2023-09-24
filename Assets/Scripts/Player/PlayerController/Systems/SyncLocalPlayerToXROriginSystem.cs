@@ -7,6 +7,7 @@ using Unity.XR.CoreUtils;
 using Unity.Mathematics;
 
 [UpdateInGroup(typeof(PresentationSystemGroup))]
+[UpdateAfter(typeof(FakeChildSystem))]
 public partial class SyncLocalPlayerToXROriginSystem : SystemBase
 {
     public GameObject XROriginGameObject;

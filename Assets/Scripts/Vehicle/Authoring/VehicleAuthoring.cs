@@ -9,12 +9,7 @@ public class VehicleAuthoring : MonoBehaviour
         {
             Entity entity = GetEntity(TransformUsageFlags.Dynamic);
 
-            VehicleComponent vehicleComponent = new VehicleComponent()
-            {
-                
-            };
-
-            AddComponent<VehicleComponent>(entity);
+            AddComponent<UninitializedVehicleComponent>(entity);
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 using System.Linq;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
@@ -12,24 +12,29 @@ public partial struct VehicleSeatInitializeSystem : ISystem
     {
         EntityCommandBuffer entityCommandBuffer = new EntityCommandBuffer(Allocator.Temp);
 
-        foreach (var (vehicleComponent, localTransform, entity) in SystemAPI.Query<RefRW<VehicleComponent>, RefRW<LocalTransform>>().WithEntityAccess())
+        foreach (var (uninitializedVehicleComponent, localTransform, entity) in SystemAPI.Query<RefRW<UninitializedVehicleComponent>, RefRW<LocalTransform>>().WithEntityAccess())
         {
-            SetSeats(vehicleComponent, localTransform, entity, ref systemState);
+            VehicleComponent vehicleComponent = SetSeats(entity, ref systemState);
+
+            entityCommandBuffer.RemoveComponent<UninitializedVehicleComponent>(entity);
+            entityCommandBuffer.AddComponent(entity, vehicleComponent);
         }
 
         entityCommandBuffer.Playback(systemState.EntityManager);
         entityCommandBuffer.Dispose();
     }
 
-    private void SetSeats(RefRW<VehicleComponent> vehicleComponent, RefRW<LocalTransform> localTransform, Entity entity, ref SystemState systemState)
+    private VehicleComponent SetSeats(Entity entity, ref SystemState systemState)
     {
         DynamicBuffer<LinkedEntityGroup> childBuffer = systemState.EntityManager.GetBuffer<LinkedEntityGroup>(entity);
 
         FixedList128Bytes<Entity> seats = new FixedList128Bytes<Entity>();
 
+        VehicleComponent vehicleComponent = new VehicleComponent();
+
         foreach (LinkedEntityGroup childEntityGoup in childBuffer)
         {
-            if (!systemState.EntityManager.HasComponent<VehicleSeatComponent>(entity)) return;
+            if (!systemState.EntityManager.HasComponent<VehicleSeatComponent>(childEntityGoup.Value)) continue;
 
             seats.Add(childEntityGoup.Value);
         }
@@ -38,6 +43,8 @@ public partial struct VehicleSeatInitializeSystem : ISystem
 
         seats.OrderBy(entity => entityManager.GetComponentData<VehicleSeatComponent>(entity).seatPosition);
 
-        vehicleComponent.ValueRW.seats = seats;
+        vehicleComponent.seats = seats;
+
+        return vehicleComponent;
     }
 }

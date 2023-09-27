@@ -1,13 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
 using Unity.Entities;
-using Unity.Transforms;
-using UnityEngine;
-using Unity.XR.CoreUtils;
-using Unity.Physics.Systems;
 using Unity.Mathematics;
+using Unity.Transforms;
+using Unity.XR.CoreUtils;
+using UnityEngine;
 
-[UpdateInGroup(typeof(PresentationSystemGroup))]
+[UpdateInGroup(typeof(TransformSystemGroup), OrderLast = true)]
 public partial class SyncLocalPlayerToXROriginSystem : SystemBase
 {
     public GameObject XROriginGameObject;
@@ -51,38 +48,39 @@ public partial class SyncLocalPlayerToXROriginSystem : SystemBase
 
     private void SetPositionOfXROriginToEntity()
     {
-        foreach (var (localTransform, entity) in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithAll<PlayerComponent>().WithEntityAccess())
+        foreach (var (localToWorld, entity) in SystemAPI.Query<RefRW<LocalToWorld>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithAll<PlayerComponent>().WithEntityAccess())
         {
-            Entity rootEntity = entity;
+            LocalTransform globalTransform = ConvertLocalEntityToGlobal(localToWorld.ValueRO, entity);
 
-            bool hasParent = SystemAPI.HasComponent<Parent>(entity);
-
-            float3 newPosition = localTransform.ValueRO.Position;
-            Quaternion newRotation = localTransform.ValueRO.Rotation;
-
-            int iterator = 0;
-
-            while (hasParent && iterator < 4)
-            {
-                Entity parent = SystemAPI.GetComponent<Parent>(rootEntity).Value;
-
-                LocalTransform parentTransform = SystemAPI.GetComponent<LocalTransform>(parent);
-
-                LocalTransform childTransform = SystemAPI.GetComponent<LocalTransform>(rootEntity);
-
-                newPosition = childTransform.TransformPoint(float3.zero);
-                newRotation = childTransform.TransformRotation(quaternion.identity);
-
-                rootEntity = parent;
-
-                hasParent = SystemAPI.HasComponent<Parent>(rootEntity);
-
-                iterator++;
-            }
-
-            XROriginGameObject.transform.position = SystemAPI.GetComponent<LocalTransform>(rootEntity).TransformPoint(newPosition);
-            XROriginGameObject.transform.rotation = SystemAPI.GetComponent<LocalTransform>(rootEntity).TransformRotation(newRotation);
+            XROriginGameObject.transform.position = globalTransform.Position;
+            XROriginGameObject.transform.rotation = globalTransform.Rotation;
         }
+    }
+
+    private LocalTransform ConvertLocalEntityToGlobal(LocalToWorld localToWorld, Entity rootEntity)
+    {
+        float3 newPosition = localToWorld.Position;
+        Quaternion newRotation = localToWorld.Rotation;
+
+        bool hasParent = SystemAPI.HasComponent<Parent>(rootEntity);
+
+        while (hasParent)
+        {
+            Entity parent = SystemAPI.GetComponent<Parent>(rootEntity).Value;
+
+            LocalToWorld childLocalToWorld = SystemAPI.GetComponent<LocalToWorld>(rootEntity);
+
+            LocalTransform childTransform = new LocalTransform() { Position = childLocalToWorld.Position, Rotation = childLocalToWorld.Rotation, Scale = 1 };
+
+            newPosition = childTransform.TransformPoint(float3.zero);
+            newRotation = childTransform.TransformRotation(quaternion.identity);
+
+            rootEntity = parent;
+
+            hasParent = SystemAPI.HasComponent<Parent>(rootEntity);
+        }
+
+        return new LocalTransform() { Position = newPosition, Rotation = newRotation, Scale = 1 };
     }
 
     private void SetXRGameObjects()

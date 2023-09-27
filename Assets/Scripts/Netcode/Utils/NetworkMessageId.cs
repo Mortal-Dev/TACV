@@ -9,6 +9,8 @@
     ServerConfirmClientVehicleEnterRequest,
     ServerDenyClientVehicleEnterRequest,
 
+    ServerSetNetworkParent,
+
     ServerSyncEntity,
     ServerLoadScene,
     ServerSpawnEntity,

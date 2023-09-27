@@ -20,7 +20,7 @@ public partial struct CenterOfLiftPositionSystem : ISystem
 
     public void OnCreate(ref SystemState systemState)
     {
-        networkEntityQuery = systemState.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<LocalTransform>(), ComponentType.ReadOnly<FixedWingComponent>(), ComponentType.ReadOnly<Parent>(), ComponentType.ReadOnly<LocalOwnedNetworkedEntityComponent>());
+        networkEntityQuery = systemState.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<LocalTransform>(), ComponentType.ReadOnly<CenterOfPressureComponent>(), ComponentType.ReadOnly<Parent>(), ComponentType.ReadOnly<LocalOwnedNetworkedEntityComponent>());
 
         fixedWingComponentLookup = systemState.GetComponentLookup<FixedWingComponent>();
     }

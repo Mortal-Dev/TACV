@@ -5,6 +5,7 @@ using Unity.Entities;
 using System.Linq;
 using System;
 using Unity.Physics;
+using System.Diagnostics;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 public partial struct RequestEnterVehicleSystem : ISystem
@@ -66,6 +67,10 @@ public partial struct RequestEnterVehicleSystem : ISystem
         Message confirmClientVehicleEnterRequest = Message.Create(MessageSendMode.Reliable, NetworkMessageId.ServerConfirmClientVehicleEnterRequest).Add(clientId).Add(vehicleNetworkId).Add(seatPosition);
 
         NetworkManager.Instance.Network.SendMessage(confirmClientVehicleEnterRequest, SendMode.Server);
+
+        UnityEngine.Debug.Log("setting parent request component");
+
+        entityManager.AddComponentData(playerEntity, new NetworkedParentRequestComponent() { rootNewParent = vehicleEntity, newParentChildId = entityManager.GetComponentData<NetworkedEntityChildComponent>(seatEntity).Id });
     }
 
     [MessageHandler((ushort)NetworkMessageId.ServerConfirmClientVehicleEnterRequest)]
@@ -85,17 +90,7 @@ public partial struct RequestEnterVehicleSystem : ISystem
 
         Entity seatEntity = Array.Find(vehicleComponent.seats.ToArray(), x => entityManager.GetComponentData<VehicleSeatComponent>(x).seatPosition == seatPosition);
 
-        if (clientIdEnteringVehicle == NetworkManager.CLIENT_NET_ID) entityManager.AddComponentData(playerEntity, new FakeChildComponent() { parent = seatEntity });
-
         VehicleSeatComponent vehicleSeatComponent = entityManager.GetComponentData<VehicleSeatComponent>(vehicleComponent.seats[seatPosition]);
-
-        ComponentStorage.AddComponentToStorage(playerEntity, entityManager.GetComponentData<PhysicsVelocity>(playerEntity));
-
-        entityManager.RemoveComponent<PhysicsVelocity>(playerEntity);
-        entityManager.RemoveComponent<PhysicsCollider>(playerEntity);
-        entityManager.RemoveComponent<PhysicsDamping>(playerEntity);
-        entityManager.RemoveComponent<PhysicsMass>(playerEntity);
-        entityManager.RemoveComponent<PhysicsWorldIndex>(playerEntity);
 
         if (NetworkManager.Instance.NetworkType != NetworkType.Host) entityManager.AddComponentData(playerEntity, new InVehicleComponent() { seat = seatEntity, vehicle = vehicleEntity });
 

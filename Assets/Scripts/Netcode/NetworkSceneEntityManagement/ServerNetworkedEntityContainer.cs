@@ -14,7 +14,7 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
 
     private EntityManager serverEntityManager;
 
-    public ServerNetworkedEntityContainer(EntityManager serverEntityManager)
+    public ServerNetworkedEntityContainer(EntityManager serverEntityManager) : base()
     {
         networkedEntities = new Dictionary<ulong, Entity>();
 

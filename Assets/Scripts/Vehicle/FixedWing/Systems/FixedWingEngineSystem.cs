@@ -21,7 +21,7 @@ public partial struct FixedWingEngineSystem : ISystem
     public void OnCreate(ref SystemState systemState)
     {
         networkEntityQuery = systemState.GetEntityQuery(ComponentType.ReadWrite<FixedWingComponent>(), ComponentType.ReadWrite<PhysicsMass>(), ComponentType.ReadWrite<PhysicsVelocity>(), 
-            ComponentType.ReadOnly<LocalTransform>(), ComponentType.ReadOnly<LocalOwnedNetworkedEntityComponent>());
+            ComponentType.ReadOnly<FixedWingInputComponent>(), ComponentType.ReadOnly<LocalTransform>(), ComponentType.ReadOnly<LocalOwnedNetworkedEntityComponent>());
 
         engineComponentLookup = systemState.GetComponentLookup<EngineComponent>();
 

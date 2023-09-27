@@ -5,6 +5,7 @@ using Unity.Burst;
 using Unity.Collections;
 using System.Linq;
 using Riptide;
+using System.Diagnostics;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 public partial struct NetworkEntitySyncSystem : ISystem
@@ -27,7 +28,13 @@ public partial struct NetworkEntitySyncSystem : ISystem
                 localTransformRecord.ValueRW.localTransformRecord = localTransform.ValueRO;
             }
 
-            DynamicBuffer<Child> children = SystemAPI.GetBuffer<Child>(entity);
+            if (!SystemAPI.HasBuffer<Child>(entity))
+            {
+                SendSyncMessage(networkedEntityComponent.ValueRO.networkEntityId, localTransform.ValueRO, updateLocalTransformOfParentEntity, new FixedList512Bytes<NetworkedEntityChildrenMap>());
+                continue;
+            }
+
+            DynamicBuffer<Child> children = systemState.EntityManager.GetBuffer<Child>(entity);
 
             FixedList512Bytes<NetworkedEntityChildrenMap> finalChangedChildrenMap = new FixedList512Bytes<NetworkedEntityChildrenMap>();
 
@@ -69,6 +76,7 @@ public partial struct NetworkEntitySyncSystem : ISystem
             result.Add(current);
         }
 
+        if (!SystemAPI.HasBuffer<Child>(root.Value)) return;
 
         DynamicBuffer<Child> children = SystemAPI.GetBuffer<Child>(root.Value);
 

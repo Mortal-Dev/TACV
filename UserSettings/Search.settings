@@ -8,6 +8,9 @@ onBoardingDoNotAskAgain = true
 showPackageIndexes = false
 showStatusBar = false
 scopes = {
+	"last_search.F6E20D54" = "buffer ci=100665616"
+	"OpenInspectorPreview.F6E20D54" = "1"
+	"currentGroup.F6E20D54" = ""
 }
 providers = {
 	journal = {
@@ -69,6 +72,7 @@ providers = {
 objectSelectors = {
 }
 recentSearches = [
+	"buffer ci=100665616"
 ]
 searchItemFavorites = [
 ]

@@ -316,6 +316,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   OriginalNetworkedPrefab: {fileID: 942708113792633898}
+  canHaveNetworkedChildren: 0
 --- !u!114 &6900429520804700761
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -4,10 +4,10 @@ using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
 using Unity.XR.CoreUtils;
+using Unity.Physics.Systems;
 using Unity.Mathematics;
 
 [UpdateInGroup(typeof(PresentationSystemGroup))]
-[UpdateAfter(typeof(FakeChildSystem))]
 public partial class SyncLocalPlayerToXROriginSystem : SystemBase
 {
     public GameObject XROriginGameObject;
@@ -51,18 +51,38 @@ public partial class SyncLocalPlayerToXROriginSystem : SystemBase
 
     private void SetPositionOfXROriginToEntity()
     {
-        bool foundPlayer = false;
-
-        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithAll<PlayerComponent>())
+        foreach (var (localTransform, entity) in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LocalOwnedNetworkedEntityComponent>().WithAll<PlayerComponent>().WithEntityAccess())
         {
-            XROriginGameObject.transform.SetPositionAndRotation(localTransform.ValueRO.Position, localTransform.ValueRO.Rotation);
-            foundPlayer = true;
+            Entity rootEntity = entity;
+
+            bool hasParent = SystemAPI.HasComponent<Parent>(entity);
+
+            float3 newPosition = localTransform.ValueRO.Position;
+            Quaternion newRotation = localTransform.ValueRO.Rotation;
+
+            int iterator = 0;
+
+            while (hasParent && iterator < 4)
+            {
+                Entity parent = SystemAPI.GetComponent<Parent>(rootEntity).Value;
+
+                LocalTransform parentTransform = SystemAPI.GetComponent<LocalTransform>(parent);
+
+                LocalTransform childTransform = SystemAPI.GetComponent<LocalTransform>(rootEntity);
+
+                newPosition = childTransform.TransformPoint(float3.zero);
+                newRotation = childTransform.TransformRotation(quaternion.identity);
+
+                rootEntity = parent;
+
+                hasParent = SystemAPI.HasComponent<Parent>(rootEntity);
+
+                iterator++;
+            }
+
+            XROriginGameObject.transform.position = SystemAPI.GetComponent<LocalTransform>(rootEntity).TransformPoint(newPosition);
+            XROriginGameObject.transform.rotation = SystemAPI.GetComponent<LocalTransform>(rootEntity).TransformRotation(newRotation);
         }
-
-        if (foundPlayer) return;
-
-        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<PlayerComponent>()) 
-            XROriginGameObject.transform.SetPositionAndRotation(localTransform.ValueRO.Position, localTransform.ValueRO.Rotation);
     }
 
     private void SetXRGameObjects()
@@ -94,9 +114,6 @@ public partial class SyncLocalPlayerToXROriginSystem : SystemBase
         foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<NetworkedEntityChildComponent>().WithAll<LeftHandComponent>())
             return localTransform;
 
-        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<LeftHandComponent>())
-            return localTransform;
-
         foundLocalVRObjects = false;
 
         return default;
@@ -107,9 +124,6 @@ public partial class SyncLocalPlayerToXROriginSystem : SystemBase
         foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<NetworkedEntityChildComponent>().WithAll<RightHandComponent>())
             return localTransform;
 
-        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<RightHandComponent>())
-            return localTransform;
-
         foundLocalVRObjects = false;
 
         return default;
@@ -118,9 +132,6 @@ public partial class SyncLocalPlayerToXROriginSystem : SystemBase
     private RefRW<LocalTransform> GetEntityHeadTransform()
     {
         foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<NetworkedEntityChildComponent>().WithAll<HeadComponent>())
-            return localTransform;
-
-        foreach (RefRW<LocalTransform> localTransform in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<HeadComponent>())
             return localTransform;
 
         foundLocalVRObjects = false;

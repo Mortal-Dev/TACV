@@ -11,4 +11,6 @@ public partial struct NetworkedEntityComponent : IComponentData
     public ulong networkEntityId;
 
     public int networkedPrefabHash;
+
+    public bool allowNetworkedChildrenRequests;
 }

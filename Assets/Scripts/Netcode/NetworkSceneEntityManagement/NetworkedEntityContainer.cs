@@ -1,10 +1,8 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using Unity.Transforms;
 using Unity.Collections;
 using Unity.Entities;
-using Riptide;
-using System.Diagnostics;
+using UnityEngine;
 
 public abstract class NetworkedEntityContainer
 {
@@ -27,6 +25,28 @@ public abstract class NetworkedEntityContainer
     public Entity GetEntity(ulong id)
     {
         return NetworkedEntities[id];
+    }
+
+    public Entity GetChildNetworkedEntity(ulong parentId, int childId)
+    {
+        if (!NetworkedEntities.TryGetValue(parentId, out Entity networkedEntityParent)) return Entity.Null;
+
+        EntityManager entityManager = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager;
+
+        DynamicBuffer<LinkedEntityGroup> linkedEntityGroupChildBuffer = entityManager.GetBuffer<LinkedEntityGroup>(networkedEntityParent);
+
+        foreach (LinkedEntityGroup linkedEntityGroup in linkedEntityGroupChildBuffer)
+        {
+            if (!entityManager.HasComponent<NetworkedEntityChildComponent>(linkedEntityGroup.Value))
+                continue;
+
+            NetworkedEntityChildComponent networkedEntityChildComponent = entityManager.GetComponentData<NetworkedEntityChildComponent>(linkedEntityGroup.Value);
+
+            if (networkedEntityChildComponent.Id == childId)
+                return linkedEntityGroup.Value;
+        }
+
+        return Entity.Null;
     }
 
     public abstract ulong CreateNetworkedEntity(int networkedPrefabHash, ushort connectionOwnerId = NetworkManager.SERVER_NET_ID, ulong networkEntityId = ulong.MaxValue);

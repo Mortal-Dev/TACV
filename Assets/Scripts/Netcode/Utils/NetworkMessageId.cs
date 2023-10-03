@@ -7,13 +7,16 @@
     ServerConfirmClientRequestVehicleControl,
     ClientRequestVehicleEnter,
     ServerConfirmClientVehicleEnterRequest,
-    ServerDenyClientVehicleEnterRequest,
+    ClientRequestVehicleExit,
+    ServerConfirmClientVehicleLeaveRequest,
 
-    ServerSetNetworkParent,
+    ServerSetNetworkEntityParent,
+    ServerUnparentNetworkEntity,
 
     ServerSyncEntity,
     ServerLoadScene,
     ServerSpawnEntity,
     ServerDestroyEntity,
-    ServerDestroyDefaultSceneEntity
+    ServerDestroyDefaultSceneEntity,
+    ServerChangeEntityOwnership
 }

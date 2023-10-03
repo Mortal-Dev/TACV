@@ -8,16 +8,12 @@ using UnityEngine;
 
 public class ServerNetworkedEntityContainer : NetworkedEntityContainer
 {
-    private readonly Dictionary<ulong, Entity> networkedEntities;
-
     private IdGenerator networkIdGenerator;
 
     private EntityManager serverEntityManager;
 
     public ServerNetworkedEntityContainer(EntityManager serverEntityManager) : base()
     {
-        networkedEntities = new Dictionary<ulong, Entity>();
-
         networkIdGenerator = new IdGenerator();
 
         this.serverEntityManager = serverEntityManager;
@@ -25,7 +21,7 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
 
     public Entity GetNetworkedEntity(ulong networkId)
     {
-        if (!networkedEntities.TryGetValue(networkId, out Entity value)) throw new Exception($"attempted to find a non-existent entity with the network id: {networkId}");
+        if (!NetworkedEntities.TryGetValue(networkId, out Entity value)) throw new Exception($"attempted to find a non-existent entity with the network id: {networkId}");
 
         return value;
     }
@@ -42,7 +38,7 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
 
         networkedEntityComponent.networkEntityId = id;
 
-        networkedEntities.Add(id, entity);
+        NetworkedEntities.Add(id, entity);
 
         SendSpawnNetworkedEntityMessage(networkedEntityComponent.networkedPrefabHash, networkedEntityComponent.connectionId, serverEntityManager.GetComponentData<LocalTransform>(entity));
 
@@ -65,7 +61,7 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
 
         serverEntityManager.SetComponentData(entity, new NetworkedEntityComponent() { connectionId = connectionOwnerId, networkEntityId = id, networkedPrefabHash = networkedPrefabHash });
 
-        networkedEntities.Add(id, entity);
+        NetworkedEntities.Add(id, entity);
 
         SendSpawnNetworkedEntityMessage(networkedPrefabHash, connectionOwnerId, serverEntityManager.GetComponentData<LocalTransform>(entity));
 
@@ -76,11 +72,11 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
     {
         if (!networkIdGenerator.IsIdInUse(id)) throw new Exception($"the networked id {id} was not found when attempting to destroy a networked entity");
 
-        serverEntityManager.DestroyEntity(networkedEntities[id]);
+        serverEntityManager.DestroyEntity(NetworkedEntities[id]);
 
         networkIdGenerator.DisposeId(id);
 
-        networkedEntities.Remove(id);
+        NetworkedEntities.Remove(id);
 
         if (SceneEntitiesActive.ContainsKey(id)) SceneEntitiesActive[id] = false;
 
@@ -89,13 +85,13 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
 
     public override void DestroyAllNetworkedEntities()
     {
-        foreach (KeyValuePair<ulong, Entity> idEntityPair in networkedEntities)
+        foreach (KeyValuePair<ulong, Entity> idEntityPair in NetworkedEntities)
         {
             DestroyNetworkedEntity(idEntityPair.Key);
         }
 
         networkIdGenerator = new IdGenerator();
-        networkedEntities.Clear();
+        NetworkedEntities.Clear();
     }
 
     private void SendSpawnNetworkedEntityMessage(int prefabHash, ushort connectionOwnerId, LocalTransform localTransform, ushort sendToClientId = NetworkManager.SERVER_NET_ID)

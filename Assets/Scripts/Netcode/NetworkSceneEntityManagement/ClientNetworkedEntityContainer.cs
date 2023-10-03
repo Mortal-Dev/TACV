@@ -4,23 +4,20 @@ using Unity.Entities;
 using Unity.Transforms;
 using Riptide;
 using UnityEngine.SceneManagement;
+using System.Diagnostics;
 
 public class ClientNetworkedEntityContainer : NetworkedEntityContainer
 {
-    private readonly Dictionary<ulong, Entity> networkedEntities;
-
     private EntityManager clientEntityManager;
 
     public ClientNetworkedEntityContainer(EntityManager clientEntityManager)
     {
-        networkedEntities = new Dictionary<ulong, Entity>();
-
         this.clientEntityManager = clientEntityManager;
     }
 
     public Entity GetNetworkedEntity(uint networkId)
     {
-        if (!networkedEntities.TryGetValue(networkId, out Entity value)) throw new Exception($"attempted to find a non-existent entity with the network id: {networkId}");
+        if (!NetworkedEntities.TryGetValue(networkId, out Entity value)) throw new Exception($"attempted to find a non-existent entity with the network id: {networkId}");
 
         return value;
     }
@@ -37,28 +34,28 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
 
         if (connectionOwnerId == NetworkManager.CLIENT_NET_ID) clientEntityManager.AddComponent(spawnedNetworkedEntity, ComponentType.ReadWrite(typeof(LocalOwnedNetworkedEntityComponent)));
         
-        networkedEntities.Add(networkEntityId, spawnedNetworkedEntity);
+        NetworkedEntities.Add(networkEntityId, spawnedNetworkedEntity);
 
         return networkEntityId;
     }
 
     public override void DestroyNetworkedEntity(ulong networkId)
     {
-        if (!networkedEntities.TryGetValue(networkId, out Entity networkedEntity)) throw new Exception($"attempted to destroy an entity with the id {networkId} that doesn't exist");
+        if (!NetworkedEntities.TryGetValue(networkId, out Entity networkedEntity)) throw new Exception($"attempted to destroy an entity with the id {networkId} that doesn't exist");
 
         clientEntityManager.DestroyEntity(networkedEntity);
 
-        networkedEntities.Remove(networkId);
+        NetworkedEntities.Remove(networkId);
     }
 
     public override void DestroyAllNetworkedEntities()
     {
-        foreach (KeyValuePair<ulong, Entity> idEntityPair in networkedEntities)
+        foreach (KeyValuePair<ulong, Entity> idEntityPair in NetworkedEntities)
         {
             DestroyNetworkedEntity(idEntityPair.Key);
         }
 
-        networkedEntities.Clear();
+        NetworkedEntities.Clear();
     }
 
     [MessageHandler((ushort)NetworkMessageId.ServerSpawnEntity)]
@@ -113,6 +110,32 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
         ulong networkId = message.GetULong();
 
         NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.DestroyNetworkedEntity(networkId);
+    }
+
+    [MessageHandler((ushort)NetworkMessageId.ServerChangeEntityOwnership)]
+    private static void ClientRecieveServerChangeEntityOwnership(Message message)
+    {
+        ulong networkId = message.GetULong();
+        ushort newOwnerConnectionId = message.GetUShort();
+
+        EntityManager entityManager = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager;
+
+        Entity networkedEntity = NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetEntity(networkId);
+
+        if (networkedEntity == Entity.Null)
+        {
+            UnityEngine.Debug.LogWarning($"attempted to change entity ownership for entity {networkId}, but it does not exist");
+            return;
+        }
+
+        NetworkedEntityComponent networkedEntityComponent = entityManager.GetComponentData<NetworkedEntityComponent>(networkedEntity);
+
+        if (networkedEntityComponent.connectionId == NetworkManager.CLIENT_NET_ID)
+            entityManager.RemoveComponent<LocalOwnedNetworkedEntityComponent>(networkedEntity);
+
+        networkedEntityComponent.connectionId = newOwnerConnectionId;
+
+        entityManager.SetComponentData(networkedEntity, networkedEntityComponent);
     }
 
     private static Entity GetChildFromChildMap(Entity parent, int[] map)

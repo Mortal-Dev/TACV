@@ -6,8 +6,6 @@ using Unity.Transforms;
 
 public class HostNetworkedEntityContainer : NetworkedEntityContainer
 {
-    //private readonly Dictionary<ulong, Entity> NetworkedEntities;
-
     private IdGenerator networkIdGenerator;
 
     private EntityManager hostEntityManager;
@@ -16,8 +14,6 @@ public class HostNetworkedEntityContainer : NetworkedEntityContainer
 
     public HostNetworkedEntityContainer(EntityManager hostEntityManager) : base()
     {
-       // NetworkedEntities = new Dictionary<ulong, Entity>();
-
         networkIdGenerator = new IdGenerator();
 
         this.hostEntityManager = hostEntityManager;

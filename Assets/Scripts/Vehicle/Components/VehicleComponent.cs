@@ -7,5 +7,5 @@ public partial struct VehicleComponent : IComponentData
 
     public FixedList128Bytes<Entity> seatsWithOwnership;
 
-    public int vehicleId;
+    public Entity currentSeatWithOwnership;
 }

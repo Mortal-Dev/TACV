@@ -42,7 +42,7 @@ public partial struct NetworkEntityChildSystem : ISystem
 
             Debug.Log("sending parent message to clients");
 
-            Message message = Message.Create(MessageSendMode.Reliable, NetworkMessageId.ServerSetNetworkParent);
+            Message message = Message.Create(MessageSendMode.Reliable, NetworkMessageId.ServerSetNetworkEntityParent);
             message.Add(networkedEntityChildComponent.networkEntityId);
             message.Add(networkedEntityParentComponent.networkEntityId);
             message.Add(networkedParentRequest.newParentChildId);
@@ -86,7 +86,7 @@ public partial struct NetworkEntityChildSystem : ISystem
         entityCommandBuffer.AddComponent(child, new ChildedNetworkedEntityComponent());
     }
 
-    [MessageHandler((ushort)NetworkMessageId.ServerSetNetworkParent)]
+    [MessageHandler((ushort)NetworkMessageId.ServerSetNetworkEntityParent)]
     public static void ServerSetNetworkedParent(Message message)
     {
         if (NetworkManager.Instance.NetworkType == NetworkType.Host) return;
@@ -105,5 +105,16 @@ public partial struct NetworkEntityChildSystem : ISystem
 
         entityCommandBuffer.Playback(NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager);
         entityCommandBuffer.Dispose();
+    }
+
+    [MessageHandler((ushort)NetworkMessageId.ServerUnparentNetworkEntity)]
+    public static void ServerUnparentNetworkedEntity(Message message)
+    {
+        ulong parentNetworkedEntityId = message.GetULong();
+        ulong networkedEntityId = message.GetULong();
+        float3 newPosition = message.GetVector3();
+        quaternion newRotation = message.GetQuaternion();
+
+
     }
 }

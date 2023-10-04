@@ -13,7 +13,7 @@ public class HostNetwork : INetwork
     public void Start(string[] args)
     {
         Server = new Server();
-        Server.RelayFilter = new MessageRelayFilter(15);
+        Server.RelayFilter = new MessageRelayFilter(typeof(ClientToServerNetworkMessageId));
         Server.Start(ushort.Parse(args[0]), ushort.Parse(args[1]));
 
         Client = new Client();

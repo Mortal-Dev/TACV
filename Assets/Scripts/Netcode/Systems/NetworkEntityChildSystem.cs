@@ -35,7 +35,7 @@ public partial struct NetworkEntityChildSystem : ISystem
 
             SetNetworkedParent(childOfParentNetworkedEntity, networkedEntityChild, entityCommandBuffer);
 
-            RemovePhysicsComponent(networkedEntityChild, entityCommandBuffer);
+            SetPhysicsComponents(networkedEntityChild, entityCommandBuffer);
 
             SendNewParentMessage(in networkedEntityChildComponent, in networkedEntityParentComponent, in networkedParentRequest);
         }
@@ -54,12 +54,17 @@ public partial struct NetworkEntityChildSystem : ISystem
         NetworkManager.Instance.Network.SendMessage(message, SendMode.Server);
     }
 
-    private void RemovePhysicsComponent(Entity entity, EntityCommandBuffer entityCommandBuffer)
+    private void SetPhysicsComponents(Entity entity, EntityCommandBuffer entityCommandBuffer)
     {
+        entityCommandBuffer.SetComponent(entity, new PhysicsVelocity { Linear = float3.zero, Angular = float3.zero });
+
+        /*
+
         entityCommandBuffer.RemoveComponent<PhysicsMass>(entity);
         entityCommandBuffer.RemoveComponent<PhysicsVelocity>(entity);
         entityCommandBuffer.RemoveComponent<PhysicsWorldIndex>(entity);
         entityCommandBuffer.RemoveComponent<PhysicsCollider>(entity);
+        */
     }
 
     private bool CheckParentEntity(Entity networkedEntityParent, in NetworkedEntityComponent parentNetworkedEntityComponent)

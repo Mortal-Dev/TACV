@@ -43,6 +43,8 @@ public partial struct VehicleLeaveSystem : ISystem
 
         if (vehicleSeatComponent.occupiedBy != playerEntity) return;
 
+        entityManager.AddComponentData(vehicleSeatComponent.occupiedBy, new NetworkedUnparentRequestComponent() { rootParent = vehicleEntity });
+
         SendMessage();
 
         void SendMessage()
@@ -69,8 +71,6 @@ public partial struct VehicleLeaveSystem : ISystem
         var (vehicleEntity, vehicleComponent) = VehicleHelper.GetVehicleEntity(vehicleNetworkId);
 
         var (seatEntity, seatComponent) = VehicleHelper.GetVehicleSeatEntity(in vehicleComponent, seatPosition);
-
-        entityManager.AddComponentData(seatComponent.occupiedBy, new NetworkedUnparentRequestComponent() { rootParent = vehicleEntity });
 
         seatComponent.occupiedBy = Entity.Null;
 

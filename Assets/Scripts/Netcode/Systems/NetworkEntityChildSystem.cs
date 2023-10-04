@@ -40,6 +40,15 @@ public partial struct NetworkEntityChildSystem : ISystem
             SendNewParentMessage(in networkedEntityChildComponent, in networkedEntityParentComponent, in networkedParentRequest);
         }
 
+        foreach (var (_, entity) in SystemAPI.Query<NetworkedUnparentRequestComponent>().WithEntityAccess())
+        {
+            entityCommandBuffer.RemoveComponent<Parent>(entity);
+            entityCommandBuffer.RemoveComponent<ChildedNetworkedEntityComponent>(entity);
+            entityCommandBuffer.RemoveComponent<NetworkedUnparentRequestComponent>(entity);
+
+            SendUnparentMessage(SystemAPI.GetComponent<NetworkedEntityComponent>(entity).networkEntityId);
+        }
+
         entityCommandBuffer.Playback(systemState.EntityManager);
         entityCommandBuffer.Dispose();
     }
@@ -84,6 +93,15 @@ public partial struct NetworkEntityChildSystem : ISystem
         return true;
     }
 
+    private void SendUnparentMessage(ulong childNetworkId)
+    {
+        Message message = Message.Create(MessageSendMode.Reliable, ServerToClientNetworkMessageId.ServerUnparentNetworkEntity);
+
+        message.Add(childNetworkId);
+
+        NetworkManager.Instance.Network.SendMessage(message, SendMode.Server);
+    }
+
     private static void SetNetworkedParent(Entity parent, Entity child, EntityCommandBuffer entityCommandBuffer)
     {
         entityCommandBuffer.AddComponent(child, new Parent { Value = parent });
@@ -116,11 +134,13 @@ public partial struct NetworkEntityChildSystem : ISystem
     [MessageHandler((ushort)ServerToClientNetworkMessageId.ServerUnparentNetworkEntity)]
     public static void ServerUnparentNetworkedEntity(Message message)
     {
-        ulong parentNetworkedEntityId = message.GetULong();
-        ulong networkedEntityId = message.GetULong();
-        float3 newPosition = message.GetVector3();
-        quaternion newRotation = message.GetQuaternion();
+        EntityManager entityManager = NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager;
 
+        ulong childNetworkedId = message.GetULong();
 
+        Entity childNetworkedEntity = NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetEntity(childNetworkedId);
+
+        entityManager.RemoveComponent<Parent>(childNetworkedEntity);
+        entityManager.RemoveComponent<ChildedNetworkedEntityComponent>(childNetworkedEntity);
     }
 }

@@ -21,12 +21,23 @@ public static class EntityHelper
     {
         EntityQuery entityQuery = entityManager.CreateEntityQuery(componentRequest);
 
-        NativeArray<Entity> playerEntities = entityQuery.ToEntityArray(Allocator.Temp);
+        NativeArray<Entity> entityQueryResult = entityQuery.ToEntityArray(Allocator.Temp);
 
-        Entity playerEntity = Array.Find(playerEntities.ToArray(), predicate);
+        foreach (Entity entity in entityQueryResult)
+        {
+            if (!predicate(entity)) continue;
+            
+            entityQueryResult.Dispose();
 
-        playerEntities.Dispose();
+            return entity;
+        }
 
-        return playerEntity;
+        return Entity.Null;
+
+        /*Entity playerEntity = Array.Find(entityQueryResult.ToArray(), predicate);
+
+        entityQueryResult.Dispose();
+
+        return playerEntity;*/
     }
 }

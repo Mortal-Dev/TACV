@@ -2,6 +2,7 @@
 using Riptide;
 using UnityEngine.SceneManagement;
 using Unity.Entities;
+using System.Reflection;
 
 public class HostNetwork : INetwork
 {
@@ -12,7 +13,7 @@ public class HostNetwork : INetwork
     public void Start(string[] args)
     {
         Server = new Server();
-        Server.RelayFilter = new MessageRelayFilter(typeof(NetworkMessageId));
+        Server.RelayFilter = new MessageRelayFilter(15);
         Server.Start(ushort.Parse(args[0]), ushort.Parse(args[1]));
 
         Client = new Client();
@@ -39,34 +40,26 @@ public class HostNetwork : INetwork
         Server = null;
     }
 
-    public void SendMessage(Message message, SendMode sendMode, ushort sendTo = ushort.MaxValue)
+    public void SendMessage(Message message, SendMode sendMode, ushort sendTo = ushort.MaxValue, bool shouldRelease = true)
     {
-        if (sendMode == SendMode.None)
-        {
-            Debug.LogError($"must specifcy {nameof(sendMode)} in SendMessage when hosting as either {nameof(SendMode.Server)} or {nameof(SendMode.Client)}");
-            return;
-        }
-
         if (sendMode == SendMode.Client)
         {
-            Client.Send(message);
+            Client.Send(message, shouldRelease);
             return;
         }
-
-        if (sendTo == ushort.MaxValue)
+        else if (sendTo == ushort.MaxValue)
         {
-            Server.SendToAll(message);
+            Server.SendToAll(message, shouldRelease);
         }
         else
         {
-            Server.Send(message, sendTo);
+            Server.Send(message, sendTo, shouldRelease);
         }
     }
 }
 
 public enum SendMode
 {
-    None,
     Client,
     Server
 }

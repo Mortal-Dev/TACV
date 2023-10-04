@@ -33,7 +33,7 @@ public partial struct FixedWingInputSystem : ISystem
         }
     }
 
-    [MessageHandler((ushort)NetworkMessageId.ClientRequestVehicleControl)]
+    [MessageHandler((ushort)ClientToServerNetworkMessageId.ClientRequestVehicleControl)]
     public static void OwnerRequestChangeRecieved(ushort clientId, Message message)
     {
         ulong vehicleNetworkId = message.GetULong();

@@ -96,7 +96,7 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
 
     private void SendSpawnNetworkedEntityMessage(int prefabHash, ushort connectionOwnerId, LocalTransform localTransform, ushort sendToClientId = NetworkManager.SERVER_NET_ID)
     {
-        Message message = Message.Create(MessageSendMode.Reliable, NetworkMessageId.ServerSpawnEntity);
+        Message message = Message.Create(MessageSendMode.Reliable, ServerToClientNetworkMessageId.ServerSpawnEntity);
             
         message.Add(prefabHash);
         message.Add(connectionOwnerId);
@@ -107,14 +107,14 @@ public class ServerNetworkedEntityContainer : NetworkedEntityContainer
 
     private void SendDestroyNetworkedEntityMessage(ulong id)
     {
-        Message message = Message.Create(MessageSendMode.Reliable, NetworkMessageId.ServerDestroyEntity);
+        Message message = Message.Create(MessageSendMode.Reliable, ServerToClientNetworkMessageId.ServerDestroyEntity);
 
         message.AddULong(id);
 
         NetworkManager.Instance.Network.SendMessage(message, SendMode.Server);
     }
 
-    [MessageHandler((ushort)NetworkMessageId.ClientSyncOwnedEntities)]
+    [MessageHandler((ushort)ClientToServerNetworkMessageId.ClientSyncOwnedEntities)]
     private static void ServerRecieveSyncEntities(ushort clientId, Message message)
     {
         if (NetworkManager.CLIENT_NET_ID == clientId) return;

@@ -8,7 +8,7 @@ public class ServerNetwork : INetwork
     public void Start(string[] args)
     {
         Server = new Server();
-        Server.RelayFilter = new MessageRelayFilter(typeof(NetworkMessageId));
+        Server.RelayFilter = new MessageRelayFilter(typeof(ServerToClientNetworkMessageId));
         Server.Start(ushort.Parse(args[0]), ushort.Parse(args[1]));
     }
     
@@ -29,7 +29,7 @@ public class ServerNetwork : INetwork
         Server = null;
     }
 
-    public void SendMessage(Message message, SendMode sendMode = SendMode.Server, ushort sendTo = ushort.MaxValue)
+    public void SendMessage(Message message, SendMode sendMode = SendMode.Server, ushort sendTo = ushort.MaxValue, bool shouldRelease = true)
     {
         if (sendMode != SendMode.Server)
         {
@@ -39,11 +39,11 @@ public class ServerNetwork : INetwork
 
         if (sendTo == ushort.MaxValue)
         {
-            Server.SendToAll(message);
+            Server.SendToAll(message, shouldRelease);
         }
         else
         {
-            Server.Send(message, sendTo);
+            Server.Send(message, sendTo, shouldRelease);
         }
     }
 }

@@ -1,11 +1,9 @@
 ﻿using Riptide;
-using System.Runtime.CompilerServices;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
 using UnityEngine;
-using static Unity.Physics.CompoundCollider;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 [UpdateBefore(typeof(NetworkEntitySyncSystem))]
@@ -30,9 +28,8 @@ public partial struct NetworkEntityChildSystem : ISystem
             Entity networkedEntityParent = NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetEntity(networkedEntityParentComponent.networkEntityId);
 
             Entity networkedEntityChild = NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetEntity(networkedEntityChildComponent.networkEntityId);
-            Entity childOfParentNetworkedEntity = networkedParentRequest.newParentChildId == 0 ? networkedEntityParent : NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetChildNetworkedEntity(networkedEntityParentComponent.networkEntityId, networkedParentRequest.newParentChildId);
 
-            Debug.Log(childOfParentNetworkedEntity.ToString());
+            Entity childOfParentNetworkedEntity = networkedParentRequest.newParentChildId == 0 ? networkedEntityParent : NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetChildNetworkedEntity(networkedEntityParentComponent.networkEntityId, networkedParentRequest.newParentChildId);
 
             if (!CheckParentEntity(networkedEntityParent, in networkedEntityParentComponent)) return;
 
@@ -40,17 +37,21 @@ public partial struct NetworkEntityChildSystem : ISystem
 
             RemovePhysicsComponent(networkedEntityChild, entityCommandBuffer);
 
-            Debug.Log("sending parent message to clients");
-
-            Message message = Message.Create(MessageSendMode.Reliable, NetworkMessageId.ServerSetNetworkEntityParent);
-            message.Add(networkedEntityChildComponent.networkEntityId);
-            message.Add(networkedEntityParentComponent.networkEntityId);
-            message.Add(networkedParentRequest.newParentChildId);
-            NetworkManager.Instance.Network.SendMessage(message, SendMode.Server);
+            SendNewParentMessage(in networkedEntityChildComponent, in networkedEntityParentComponent, in networkedParentRequest);
         }
 
         entityCommandBuffer.Playback(systemState.EntityManager);
         entityCommandBuffer.Dispose();
+    }
+
+    private void SendNewParentMessage(in NetworkedEntityComponent networkedEntityChildComponent, in NetworkedEntityComponent networkedEntityParentComponent, 
+        in NetworkedParentRequestComponent networkedParentRequest)
+    {
+        Message message = Message.Create(MessageSendMode.Reliable, ServerToClientNetworkMessageId.ServerSetNetworkEntityParent);
+        message.Add(networkedEntityChildComponent.networkEntityId);
+        message.Add(networkedEntityParentComponent.networkEntityId);
+        message.Add(networkedParentRequest.newParentChildId);
+        NetworkManager.Instance.Network.SendMessage(message, SendMode.Server);
     }
 
     private void RemovePhysicsComponent(Entity entity, EntityCommandBuffer entityCommandBuffer)
@@ -86,7 +87,7 @@ public partial struct NetworkEntityChildSystem : ISystem
         entityCommandBuffer.AddComponent(child, new ChildedNetworkedEntityComponent());
     }
 
-    [MessageHandler((ushort)NetworkMessageId.ServerSetNetworkEntityParent)]
+    [MessageHandler((ushort)ServerToClientNetworkMessageId.ServerSetNetworkEntityParent)]
     public static void ServerSetNetworkedParent(Message message)
     {
         if (NetworkManager.Instance.NetworkType == NetworkType.Host) return;
@@ -107,7 +108,7 @@ public partial struct NetworkEntityChildSystem : ISystem
         entityCommandBuffer.Dispose();
     }
 
-    [MessageHandler((ushort)NetworkMessageId.ServerUnparentNetworkEntity)]
+    [MessageHandler((ushort)ServerToClientNetworkMessageId.ServerUnparentNetworkEntity)]
     public static void ServerUnparentNetworkedEntity(Message message)
     {
         ulong parentNetworkedEntityId = message.GetULong();

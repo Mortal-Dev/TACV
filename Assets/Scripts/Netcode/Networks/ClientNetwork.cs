@@ -30,7 +30,7 @@ public class ClientNetwork : INetwork
         Client = null;
     }
 
-    public void SendMessage(Message message, SendMode sendMode = SendMode.Client, ushort sendTo = ushort.MaxValue)
+    public void SendMessage(Message message, SendMode sendMode = SendMode.Client, ushort sendTo = ushort.MaxValue, bool shouldRelease = true)
     {
         if (sendMode != SendMode.Client)
         {
@@ -38,7 +38,7 @@ public class ClientNetwork : INetwork
             return;
         }
 
-        Client.Send(message);
+        Client.Send(message, shouldRelease);
     }
 }
 

@@ -58,7 +58,7 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
         NetworkedEntities.Clear();
     }
 
-    [MessageHandler((ushort)NetworkMessageId.ServerSpawnEntity)]
+    [MessageHandler((ushort)ServerToClientNetworkMessageId.ServerSpawnEntity)]
     private static void SpawnNetworkedEntityRecieved(Message message)
     {
         int networkedPrefabHash = message.GetInt();
@@ -72,7 +72,7 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
         NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.SetComponentData(networkEntity, localTransform);
     }
 
-    [MessageHandler((ushort)NetworkMessageId.ServerDestroyEntity)]
+    [MessageHandler((ushort)ServerToClientNetworkMessageId.ServerDestroyEntity)]
     private static void DestroyNetworkedEntityRecieved(Message message)
     {
         ulong networkedEntityId = message.GetULong();
@@ -80,7 +80,7 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
         NetworkManager.Instance.NetworkSceneManager.NetworkWorld.EntityManager.DestroyEntity(NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.GetEntity(networkedEntityId));
     }
 
-    [MessageHandler((ushort)NetworkMessageId.ServerSyncEntity)]
+    [MessageHandler((ushort)ServerToClientNetworkMessageId.ServerSyncEntity)]
     private static void ClientRecieveSyncEntities(Message message)
     {
         if (NetworkManager.Instance.NetworkType == NetworkType.Host) return;
@@ -104,7 +104,7 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
         }
     }
 
-    [MessageHandler((ushort)NetworkMessageId.ServerDestroyDefaultSceneEntity)]
+    [MessageHandler((ushort)ServerToClientNetworkMessageId.ServerDestroyDefaultSceneEntity)]
     private static void ClientRecieveServerDestroyDefaultSceneEntity(Message message)
     {
         ulong networkId = message.GetULong();
@@ -112,7 +112,7 @@ public class ClientNetworkedEntityContainer : NetworkedEntityContainer
         NetworkManager.Instance.NetworkSceneManager.NetworkedEntityContainer.DestroyNetworkedEntity(networkId);
     }
 
-    [MessageHandler((ushort)NetworkMessageId.ServerChangeEntityOwnership)]
+    [MessageHandler((ushort)ServerToClientNetworkMessageId.ServerChangeEntityOwnership)]
     private static void ClientRecieveServerChangeEntityOwnership(Message message)
     {
         ulong networkId = message.GetULong();

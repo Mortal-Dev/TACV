@@ -121,7 +121,7 @@ public class NetworkSceneManager
 
     private void SendClientCompletedSceneMessage()
     {
-        Message message = Message.Create(MessageSendMode.Reliable, (ushort)NetworkMessageId.ClientFinishedLoadingScene);
+        Message message = Message.Create(MessageSendMode.Reliable, (ushort)ClientToServerNetworkMessageId.ClientFinishedLoadingScene);
 
         message.Add(sceneToLoadName);
 
@@ -130,7 +130,7 @@ public class NetworkSceneManager
 
     private void SendSpawnNetworkedEntityMessage(int prefabHash, ushort connectionOwnerId, LocalTransform localTransform, ulong networkedEntityId, ushort sendToClientId = NetworkManager.SERVER_NET_ID)
     {
-        Message message = Message.Create(MessageSendMode.Reliable, NetworkMessageId.ServerSpawnEntity);
+        Message message = Message.Create(MessageSendMode.Reliable, ServerToClientNetworkMessageId.ServerSpawnEntity);
 
         message.Add(prefabHash);
         message.Add(connectionOwnerId);
@@ -142,14 +142,14 @@ public class NetworkSceneManager
 
     private void SendServerLoadSceneMessage(string sceneName, ushort sendToClientId)
     {
-        Message message = Message.Create(MessageSendMode.Reliable, (ushort)NetworkMessageId.ServerLoadScene);
+        Message message = Message.Create(MessageSendMode.Reliable, (ushort)ServerToClientNetworkMessageId.ServerLoadScene);
 
         message.AddString(sceneName);
 
         NetworkManager.Instance.Network.SendMessage(message, SendMode.Server, sendToClientId);
     }
 
-    [MessageHandler((ushort)NetworkMessageId.ClientFinishedLoadingScene)]
+    [MessageHandler((ushort)ClientToServerNetworkMessageId.ClientFinishedLoadingScene)]
     private static void ClientFinishedLoadingScene(ushort clientId, Message message)
     {
         //if we're host, don't do this method
@@ -168,7 +168,7 @@ public class NetworkSceneManager
         SendEntitySpawns(clientId);
     }
 
-    [MessageHandler((ushort)NetworkMessageId.ServerLoadScene)]
+    [MessageHandler((ushort)ServerToClientNetworkMessageId.ServerLoadScene)]
     private static void ServerLoadScene(Message message)
     {
         //if we're host, don't do this method
@@ -183,7 +183,7 @@ public class NetworkSceneManager
         {
             if (activeNetworkedSceneEntityPair.Value) continue;
 
-            Message destroyEntityMessage = Message.Create(MessageSendMode.Reliable, NetworkMessageId.ServerDestroyEntity);
+            Message destroyEntityMessage = Message.Create(MessageSendMode.Reliable, ServerToClientNetworkMessageId.ServerDestroyEntity);
 
             destroyEntityMessage.AddULong(activeNetworkedSceneEntityPair.Key);
 

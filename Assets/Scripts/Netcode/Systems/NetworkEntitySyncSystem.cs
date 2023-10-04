@@ -90,7 +90,7 @@ public partial struct NetworkEntitySyncSystem : ISystem
 
     private void SendSyncMessage(ulong parentNetworkedEntityId, LocalTransform parentNetworkedEntityTransform, bool updateNetworkedEntityTransform, FixedList512Bytes<NetworkedEntityChildrenMap> changedChildMap)
     {
-        Message message = Message.Create(MessageSendMode.Unreliable, (ushort)(networkManagerEntityComponent.NetworkType == NetworkType.Server || networkManagerEntityComponent.NetworkType == NetworkType.Host ? NetworkMessageId.ServerSyncEntity : NetworkMessageId.ClientSyncOwnedEntities));
+        Message message = Message.Create(MessageSendMode.Unreliable, (networkManagerEntityComponent.NetworkType == NetworkType.Server || networkManagerEntityComponent.NetworkType == NetworkType.Host ? (ushort)ServerToClientNetworkMessageId.ServerSyncEntity : (ushort)ClientToServerNetworkMessageId.ClientSyncOwnedEntities));
 
         message.Add(parentNetworkedEntityId);
 

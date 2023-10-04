@@ -18,11 +18,8 @@ public partial struct VehicleInteractSystem : ISystem
         foreach (var (playerComponent, localOwnedNetworkedEntityComponent, entity) in SystemAPI.Query<RefRO<PlayerComponent>, RefRO<LocalOwnedNetworkedEntityComponent>>()
             .WithNone<InVehicleComponent>().WithNone<RequestVehicleEnterComponent>().WithEntityAccess())
         {
-            Debug.Log("found player");
-
             foreach (RefRO<NetworkedEntityComponent> networkedEntityComponent in SystemAPI.Query<RefRO<NetworkedEntityComponent>>().WithAll<VehicleComponent>())
             {
-                Debug.Log("added request component");
                 entityCommandBuffer.AddComponent(entity, new RequestVehicleEnterComponent() { seat = 0, vehicleNetworkId = networkedEntityComponent.ValueRO.networkEntityId });
 
                 didRequest = true;

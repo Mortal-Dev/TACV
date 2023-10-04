@@ -113,7 +113,7 @@ public class HostNetworkedEntityContainer : NetworkedEntityContainer
 
         Message CreateSpawnedNetworkedEntityMessage()
         {
-            message = Message.Create(MessageSendMode.Reliable, NetworkMessageId.ServerSpawnEntity);
+            message = Message.Create(MessageSendMode.Reliable, ServerToClientNetworkMessageId.ServerSpawnEntity);
 
             message.Add(prefabHash);
             message.Add(connectionOwnerId);
@@ -131,7 +131,7 @@ public class HostNetworkedEntityContainer : NetworkedEntityContainer
         {
             if (connection.Id == NetworkManager.CLIENT_NET_ID) continue;
 
-            NetworkManager.Instance.Network.SendMessage(Message.Create(MessageSendMode.Reliable, NetworkMessageId.ServerDestroyEntity).AddULong(id), SendMode.Server, connection.Id);
+            NetworkManager.Instance.Network.SendMessage(Message.Create(MessageSendMode.Reliable, ServerToClientNetworkMessageId.ServerDestroyEntity).AddULong(id), SendMode.Server, connection.Id);
         }
     }
 }

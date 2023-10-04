@@ -8,5 +8,5 @@ public interface INetwork
 
     public void Stop();
 
-    public void SendMessage(Message message, SendMode sendMode, ushort sendTo = ushort.MaxValue);
+    public void SendMessage(Message message, SendMode sendMode, ushort sendTo = ushort.MaxValue, bool shouldRelease = true);
 }

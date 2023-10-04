@@ -1,6 +1,6 @@
 ﻿using Unity.Entities;
 
-partial struct VehicleSeatComponent : IComponentData
+public partial struct VehicleSeatComponent : IComponentData
 {
     public int seatPosition;
 

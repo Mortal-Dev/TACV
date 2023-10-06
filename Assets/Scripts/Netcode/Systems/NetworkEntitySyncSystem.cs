@@ -30,17 +30,17 @@ public partial struct NetworkEntitySyncSystem : ISystem
 
             if (!SystemAPI.HasBuffer<Child>(entity))
             {
-                SendSyncMessage(networkedEntityComponent.ValueRO.networkEntityId, localTransform.ValueRO, updateLocalTransformOfParentEntity, new FixedList512Bytes<NetworkedEntityChildrenMap>());
+                SendSyncMessage(networkedEntityComponent.ValueRO.networkEntityId, localTransform.ValueRO, updateLocalTransformOfParentEntity, new List<NetworkedEntityChildrenMap>());
                 continue;
             }
 
             DynamicBuffer<Child> children = systemState.EntityManager.GetBuffer<Child>(entity);
 
-            FixedList512Bytes<NetworkedEntityChildrenMap> finalChangedChildrenMap = new FixedList512Bytes<NetworkedEntityChildrenMap>();
+            List<NetworkedEntityChildrenMap> finalChangedChildrenMap = new List<NetworkedEntityChildrenMap>();
 
             foreach (Child child in children)
             {
-                FixedList512Bytes<NetworkedEntityChildrenMap> changedChildrenMaps = GetChangedChildrenPaths(child, ref systemState);
+                List<NetworkedEntityChildrenMap> changedChildrenMaps = GetChangedChildrenPaths(child, ref systemState);
 
                 foreach (NetworkedEntityChildrenMap changedChildMap in changedChildrenMaps) finalChangedChildrenMap.Add(changedChildMap);
             }
@@ -49,16 +49,16 @@ public partial struct NetworkEntitySyncSystem : ISystem
         }
     }
 
-    private FixedList512Bytes<NetworkedEntityChildrenMap> GetChangedChildrenPaths(Child root, ref SystemState systemState)
+    private List<NetworkedEntityChildrenMap> GetChangedChildrenPaths(Child root, ref SystemState systemState)
     {
-        FixedList512Bytes<NetworkedEntityChildrenMap> result = new FixedList512Bytes<NetworkedEntityChildrenMap>();
+        List<NetworkedEntityChildrenMap> result = new List<NetworkedEntityChildrenMap>();
 
         FindChangedChildren(root, ref result, new NetworkedEntityChildrenMap(), ref systemState);
 
         return result;
     }
 
-    private void FindChangedChildren(Child root, ref FixedList512Bytes<NetworkedEntityChildrenMap> result, NetworkedEntityChildrenMap current, ref SystemState systemState)
+    private void FindChangedChildren(Child root, ref List<NetworkedEntityChildrenMap> result, NetworkedEntityChildrenMap current, ref SystemState systemState)
     {
         if (!SystemAPI.HasComponent<NetworkedEntityChildComponent>(root.Value)) return;
 
@@ -88,7 +88,7 @@ public partial struct NetworkEntitySyncSystem : ISystem
         return;
     }
 
-    private void SendSyncMessage(ulong parentNetworkedEntityId, LocalTransform parentNetworkedEntityTransform, bool updateNetworkedEntityTransform, FixedList512Bytes<NetworkedEntityChildrenMap> changedChildMap)
+    private void SendSyncMessage(ulong parentNetworkedEntityId, LocalTransform parentNetworkedEntityTransform, bool updateNetworkedEntityTransform, List<NetworkedEntityChildrenMap> changedChildMap)
     {
         Message message = Message.Create(MessageSendMode.Unreliable, (networkManagerEntityComponent.NetworkType == NetworkType.Server || networkManagerEntityComponent.NetworkType == NetworkType.Host ? (ushort)ServerToClientNetworkMessageId.ServerSyncEntity : (ushort)ClientToServerNetworkMessageId.ClientSyncOwnedEntities));
 
@@ -99,7 +99,7 @@ public partial struct NetworkEntitySyncSystem : ISystem
         //child might update, but parent might not
         if (updateNetworkedEntityTransform) message.AddLocalTransform(parentNetworkedEntityTransform);
 
-        message.Add(changedChildMap.Length);
+        message.Add(changedChildMap.Count);
 
         foreach (NetworkedEntityChildrenMap networkedEntityChildMapLocalTransform in changedChildMap)
         {
@@ -112,9 +112,9 @@ public partial struct NetworkEntitySyncSystem : ISystem
 
 }
 
-partial struct NetworkedEntityChildrenMap
+class NetworkedEntityChildrenMap
 {
-    public FixedList512Bytes<int> NetworkedEntityChildMap;
+    public List<int> NetworkedEntityChildMap = new List<int>();
 
     public LocalTransform LocalTransform;
 }

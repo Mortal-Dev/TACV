@@ -40,7 +40,7 @@ public partial class SceneFinishedLoadingSystem : SystemBase
             }
         }
 
-        int count = SubScene.AllSubScenes.Count;
+        int count = 1;
 
         int counter = 0;
 

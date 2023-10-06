@@ -18,6 +18,7 @@ public class FPSDisplay : MonoBehaviour
         fpsText = GetComponent<TMP_Text>();
 
         Application.targetFrameRate = 72;
+        QualitySettings.vSyncCount = 0;
     }
 
     // Update is called once per frame
